@@ -1,0 +1,30 @@
+{
+  "name": "ray-tracer",
+  "version": "1.0.0",
+  "description": "ray tracer for studying purposes",
+  "main": "ray-tracer.cpp",
+  "scripts": {
+    "build:macos": "clang++ ray-tracer.cpp -std=c++17 -o ray-tracer",
+    "exec:macos": "./ray-tracer < input.txt > output.txt",
+    "buildRun:macos": "clang++ ray-tracer.cpp -std=c++17 -o ray-tracer && ./ray-tracer < input.txt > output.txt",
+    "debug:macos": "",
+
+    "build:windows": "",
+    "exec:windows": "",
+    "debug:windows": "",
+
+    "build:linux": "",
+    "exec:linux": "",
+    "debug:linux": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FredericoBresani/ray-tracer.git"
+  },
+  "author": "Frederico fbs4@cin.ufpe.br",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FredericoBresani/ray-tracer/issues"
+  },
+  "homepage": "https://github.com/FredericoBresani/ray-tracer#readme"
+}
