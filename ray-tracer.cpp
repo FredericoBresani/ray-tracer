@@ -221,12 +221,12 @@ int main()
                 camera = new Camera(1920, 1080, 10.0, Vec3D(), Vec3D(), Point3D());
                 break;
             }
-            case 'x' || 'y' || 'z':
+            case 'r':
             {
                 Line *line = new Line();
                 objetos.push_back(line);
                 break;
-            }   
+            }  
         }
     }
     return 0;
