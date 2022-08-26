@@ -1,12 +1,18 @@
-#include <stdio.h>
 #include <iostream>
-#include <stdlib.h>
-#include <vector>
-#include <cstdio>
 #include <math.h>
+#include <vector>
+
+#define infinity 1e8
+#define kEpsilon 10e-6
 
 // lets use doubles for object-ray intersection and floats for shading calculations
 
+template <typename T> class Matrix4
+{  
+    public:
+        std::vector<std::vector<T>> matrix;
+        Matrix4(): matrix(std::vector<std::vector<T>>(4, std::vector<T>(4))) {}
+};
 template <typename T> class Vec2
 {
     public:
@@ -25,7 +31,8 @@ template <typename T> class Vec2
         }
         Vec2<T> normalize(const Vec2<T>& v) const
         {
-            return Vec2<T>(v.x/v->norma(), v.y/v->norma());
+            const T norma = v->norma();
+            return Vec2<T>(v / norma);
         }
         // multiplicacao por matriz 3x3 a esquerda
 };
@@ -43,10 +50,26 @@ template <typename T> class Vec3
         Vec3<T> operator / (const T& t) const { return Vec3<T>(x/t, y/t, z/t); }
         T operator * (const Vec3<T>& v) const { return (x*v.x) + (y*v.y) + (z*v.z); }
         Vec3<T> operator ^ (const Vec3<T>& v) const { return Vec3<T>(y*v.z - (z*v.y), z*v.x - (x*v.z), x*v.y - (y*v.x)); }
-        // normalização
-        // norma
-        // multiplicacao por matriz 4x4 a esquerda
-        // ponto - ponto
+        T norma(const Vec3<T>& v) const
+        {
+            return pow((v.x*v.x) + (v.y*v.y) + (v.z*v.z), 0.5);
+        }
+        Vec3<T> normalize(const Vec3<T>& v) const
+        {
+            const T norma = v->norma();
+            return Vec3<T>(v / norma);
+        }
+        Vec3<T> operator * (const Matrix4<T>& m) const 
+        { 
+            T _x, _y, _z;
+            for(size_t column = 0; column < m->matrix.size(); column++)
+            {
+                _x += x*m->matrix[0][column]; 
+                _y += y*m->matrix[1][column];
+                _z += z*m->matrix[2][column];
+            }
+            return Vec3<T>(_x, _y, _z); 
+        }
 };
 
 template <typename T> class Point2
@@ -61,20 +84,27 @@ template <typename T> class Point3
         Point3(): x(T(0)), y(T(0)), z(T(0)) {}
         Point3(T _x): x(T(_x)), y(T(_x)), z(T(_x)) {}
         Point3(T _x, T _y, T _z): x(T(_x)), y(T(_y)), z(T(_z)) {}
-        // ponto + vetor, ponto - vetor
-        // ponto multiplicado por escalar pela esquerda ou direita
-        // soma varicentrica
-        // interpolação
-        // ponto multiplicado por matriz 4x4 pela esquerda
-        // distancia entre dois pontos
-        // ponto - ponto
-};
-
-template <typename T> class Matrix4
-{  
-    public:
-        std::vector<std::vector<T>> matrix;
-        Matrix4(): matrix(std::vector<std::vector<T>>(4, std::vector<T>(4))) {}
+        Point3<T> operator + (const Vec3<T>& v) const { return Point3<T>(x + v.x, y + v.y, z + v.z); }
+        Point3<T> operator - (const Vec3<T>& v) const { return Point3<T>(x - v.x, y - v.y, z - z.v); }
+        Point3<T> operator * (const T& t) const { return Point3<T>(x*t, y*t, z*t); }
+        T operator ^ (const Point3<T>& p) const { return (x*p.x) + (y*p.y) + (z*p.z); }
+        Point3<T> operator * (const Matrix4<T>& m) const 
+        {
+            T _x, _y, _z;
+            for(size_t column = 0; column < m->matrix.size(); column++)
+            {
+                _x += x*m->matrix[0][column]; 
+                _y += y*m->matrix[1][column];
+                _z += z*m->matrix[2][column];
+            }
+            return Point3<T>(_x, _y, _z); 
+        }
+        Vec3<T> operator - (const Point3<T>& p) const { return Vec3<T>(x - p.x, y - p.y, z - p.z); }
+        T distance(const Point3<T>& p) const
+        {
+            Vec3<T> v = Vec3<T>(x - p.x, y - p.y, z - p.z);
+            return v.norma(v);
+        }
 };
 
 typedef Vec2<double> Vec2D;
@@ -113,38 +143,91 @@ class Object
     public:
         Object() {}
         virtual ~Object() {}
-        virtual bool rayObjectIntersect(const Ray &ray, double& tmin) const = 0; //consider t from e = [10ˆ-6, +infiniyt)
+        virtual bool rayObjectIntersect(const Ray &ray, double& tmin) const = 0;
 };
 
 class Sphere: public Object 
 {
     public:
-        Sphere() {}
+        Point3D center;
+        double radius;
+        Sphere(Point3D c, double r): center(c), radius(r) {}
         ~Sphere() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin) const
         {
-            return 1;
-        }
-};
-
-class Triangle: public Object 
-{
-    public:
-        Triangle() {}
-        ~Triangle() {}
-        bool rayObjectIntersect(const Ray &ray, double& tmin) const
-        {
-            return 1;
+            double a = pow(ray.direction.norma(ray.direction), 2);
+            double b = ((ray.origin - this->center) * ray.direction) * 2;
+            double c = ((this->center ^ this->center) + (ray.origin ^ ray.origin)) + (-2)*(ray.origin ^ this->center) - (this->radius*this->radius);
+            double delta = (b*b) - 4*a*c; 
+            if (delta == 0)
+            {
+                double t = (b*b)/2*a;
+                if (t > kEpsilon)
+                {
+                    tmin = t;
+                    return (true);
+                } else {
+                    return (false);
+                }
+            }
+            else if (delta > 0)
+            {
+                double sqrtDelta = pow(delta, 0.5);
+                double t1 = ((b*b) + sqrtDelta)/2*a;
+                double t2 = ((b*b) - sqrtDelta)/2*a;
+                if (t1 > t2 && t1 > kEpsilon)
+                {
+                    tmin = t1;
+                    return (true);
+                }
+                else if (t2 > kEpsilon)
+                {
+                    tmin = t2;
+                    return (true);
+                }
+                return false;
+            }
+            return (false);
         }
 };
 
 class Plane: public Object 
 {
     public:
-        Plane() {}
+        Vec3D normal;
+        Point3D pp;
+        Plane(Vec3D n, Point3D p): normal(n), pp(p) {}
         ~Plane() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin) const 
         {
+            double t = ((pp - ray.origin) * this->normal) / (ray.direction * this->normal);
+            if (t > kEpsilon)
+            {
+                tmin = tmin;
+                return (true);
+
+            } else {
+                return (false);
+            }
+        }
+};
+
+class Triangle: public Object 
+{
+    public:
+        Point3D A;
+        Point3D B;
+        Point3D C;
+        Triangle(Point3D a, Point3D b, Point3D c): A(a), B(b), C(c) {}
+        ~Triangle() {}
+        bool rayObjectIntersect(const Ray& ray, double& tmin) const
+        {
+            Vec3D tPlaneNormal = (this->A - this->B) ^ (this->A - this->C);
+            if (((ray.direction * (-1)) * tPlaneNormal) <= 0)
+            {
+                tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
+            }
+            Plane *tPlane = new Plane(tPlaneNormal, this->A);
             return 1;
         }
 };
@@ -194,19 +277,19 @@ int main()
         {
             case 's': 
             {
-                Sphere *e = new Sphere();
+                Sphere *e = new Sphere(Point3D(), 10.0);
                 objetos.push_back(e);
                 break;    
             }
             case 'p':
             {
-                Plane *p = new Plane();
+                Plane *p = new Plane(Vec3D(), Point3D());
                 objetos.push_back(p);
                 break;
             }
             case 't':
             {
-                Triangle *t = new Triangle();
+                Triangle *t = new Triangle(Point3D(), Point3D(), Point3D());
                 objetos.push_back(t);
                 break;
             }
