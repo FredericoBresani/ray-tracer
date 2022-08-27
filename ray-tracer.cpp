@@ -143,23 +143,24 @@ class Object
     public:
         Object() {}
         virtual ~Object() {}
-        virtual bool rayObjectIntersect(const Ray &ray, double& tmin) const = 0;
+        virtual bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const = 0;
 };
 
 class Sphere: public Object 
 {
     public:
         Point3D center;
+        Vec3D color;
         double radius;
-        Sphere(Point3D c, double r): center(c), radius(r) {}
+        Sphere(Point3D c, Vec3D RGB, double r): center(c), color(RGB), radius(r) {}
         ~Sphere() {}
-        bool rayObjectIntersect(const Ray &ray, double& tmin) const
+        bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const
         {
             double a = pow(ray.direction.norma(ray.direction), 2);
             double b = ((ray.origin - this->center) * ray.direction) * 2;
             double c = ((this->center ^ this->center) + (ray.origin ^ ray.origin)) + (-2)*(ray.origin ^ this->center) - (this->radius*this->radius);
             double delta = (b*b) - 4*a*c; 
-            if (delta == 0)
+            if (delta == 0.0)
             {
                 double t = (b*b)/2*a;
                 if (t > kEpsilon)
@@ -170,7 +171,7 @@ class Sphere: public Object
                     return (false);
                 }
             }
-            else if (delta > 0)
+            else if (delta > 0.0)
             {
                 double sqrtDelta = pow(delta, 0.5);
                 double t1 = ((b*b) + sqrtDelta)/2*a;
@@ -196,14 +197,16 @@ class Plane: public Object
     public:
         Vec3D normal;
         Point3D pp;
-        Plane(Vec3D n, Point3D p): normal(n), pp(p) {}
+        Vec3D color;
+        Plane(Vec3D n, Point3D p, Vec3D RGB): normal(n), pp(p), color(RGB) {}
         ~Plane() {}
-        bool rayObjectIntersect(const Ray &ray, double& tmin) const 
+        bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const 
         {
             double t = ((pp - ray.origin) * this->normal) / (ray.direction * this->normal);
             if (t > kEpsilon)
             {
                 tmin = tmin;
+                info.hit_location = ray.origin + ray.direction*tmin;
                 return (true);
 
             } else {
@@ -218,27 +221,54 @@ class Triangle: public Object
         Point3D A;
         Point3D B;
         Point3D C;
-        Triangle(Point3D a, Point3D b, Point3D c): A(a), B(b), C(c) {}
+        Vec3D color;
+        Triangle(Point3D a, Point3D b, Point3D c, Vec3D RGB): A(a), B(b), C(c), color(RGB) {}
         ~Triangle() {}
-        bool rayObjectIntersect(const Ray& ray, double& tmin) const
+        bool rayObjectIntersect(const Ray& ray, double& tmin, HitInfo& info) const
         {
             Vec3D tPlaneNormal = (this->A - this->B) ^ (this->A - this->C);
             if (((ray.direction * (-1)) * tPlaneNormal) <= 0)
             {
                 tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
             }
-            Plane *tPlane = new Plane(tPlaneNormal, this->A);
-            return 1;
+            Plane *tPlane = new Plane(tPlaneNormal, this->A, color);
+            Point3D pHit;
+            if (tPlane->rayObjectIntersect(ray, tmin, info)) 
+            {   
+                pHit = info.hit_location;
+                double gama = (pHit.z - ((pHit.x*A.z)/A.x) - ((((pHit.y*A.x) - (A.y*pHit.x))/((B.y*A.x) - (A.y*B.x)))*(B.z - (B.x*A.z)/A.x)))/((((A.y*C.x) - (C.y*A.x))/((B.y*A.x) - (A.y*B.x)))*(B.z - (B.x*A.z)/A.x) + (C.z - (C.x*A.z)/A.x));
+                double beta = ((pHit.y*A.x) - (gama*C.y*A.x) + (A.y*gama*C.x) - (A.y*pHit.x))/((B.y*A.x) - (A.y*B.x));
+                double alpha = ((pHit.x) - (beta*B.x) - (alpha*C.x))/A.x;
+                if (alpha + beta + gama == 1)
+                {
+                    return (true);
+                } else {
+                    return (false);
+                }
+            } else {
+                return 0;
+            }
+
         }
 };
 
 class Line: public Object 
 {
     public:
-        Line() {}
+        Point3D origin;
+        Vec3D direction;
+        Vec3D color;
+        Line(Point3D o, Vec3D d, Vec3D RGB): origin(o), direction(d), color(RGB) {}
         ~Line() {}
-        bool rayObjectIntersect(const Ray &ray, double& tmin) const
+        bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& hit) const
         {
+            double t = (((origin.y - ray.origin.y)*direction.x) + ((ray.origin.x - origin.x)*direction.y))/((direction.x - direction.y)*ray.direction.x);
+
+            if (t > kEpsilon)
+            {
+                tmin = t;
+                return (true);
+            } 
             return 1;
         }
 };
@@ -263,6 +293,11 @@ class Camera
         ~Camera() {}
 };
 
+void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& camera)
+{
+    // to wach pixel on the screen call trace()
+}
+
 int main()
 {
     Matrix4D matriz = Matrix4D();
@@ -270,47 +305,54 @@ int main()
     std::vector<Light*> lights;
     Camera *camera;
     char objectType;
+    bool read = true;
     int _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
-    while (scanf("%c %i %i %i %i %i %i %i %i %i %i %i %i\n", &objectType, &_1, &_2, &_3, &_4, &_5, &_6, &_7, &_8, &_9, &_10, &_11, &_12) != EOF) 
+    while (scanf("%c %i %i %i %i %i %i %i %i %i %i %i %i\n", &objectType, &_1, &_2, &_3, &_4, &_5, &_6, &_7, &_8, &_9, &_10, &_11, &_12) != EOF && read) 
     {
         switch(objectType)
         {
             case 's': 
             {
-                Sphere *e = new Sphere(Point3D(), 10.0);
+                Sphere *e = new Sphere(Point3D(_1, _2, _3), Vec3D(_5, _6, _7), _4);
                 objetos.push_back(e);
                 break;    
             }
             case 'p':
             {
-                Plane *p = new Plane(Vec3D(), Point3D());
+                Plane *p = new Plane(Vec3D(_4, _5, _6), Point3D(_1, _2, _3), Vec3D(_7, _8, _9));
                 objetos.push_back(p);
                 break;
             }
             case 't':
             {
-                Triangle *t = new Triangle(Point3D(), Point3D(), Point3D());
+                Triangle *t = new Triangle(Point3D(_1, _2, _3), Point3D(_4, _5, _6), Point3D(_7, _8, _9), Vec3D(_10, _11, _12));
                 objetos.push_back(t);
                 break;
             }
             case 'l':
             {
-                Light *l = new Light(Point3D(), Vec3D());
+                Light *l = new Light(Point3D(_1, _2, _3), Vec3D(_4, _5, _6));
                 lights.push_back(l);
                 break;
             }
             case 'c':
             {
-                camera = new Camera(1920, 1080, 10.0, Vec3D(), Vec3D(), Point3D());
+                camera = new Camera(_1, _2, _3, Vec3D(_4, _5, _6), Vec3D(_7, _8, _9), Point3D(_10, _11, _12));
                 break;
             }
             case 'r':
             {
-                Line *line = new Line();
+                Line *line = new Line(Point3D(_1, _2, _3), Vec3D(_4, _5, _6), Vec3D(_7, _8, _9));
                 objetos.push_back(line);
                 break;
             }  
+            default:
+            {
+                read = false;
+                break;
+            }
         }
     }
+    render(objetos, lights, *camera);
     return 0;
 }
