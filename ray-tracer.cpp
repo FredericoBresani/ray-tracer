@@ -1,6 +1,8 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <fstream>
+#include <algorithm>
 
 #define infinity 1e8
 #define kEpsilon 10e-6
@@ -56,7 +58,7 @@ template <typename T> class Vec3
         }
         Vec3<T> normalize(const Vec3<T>& v) const
         {
-            const T norma = v->norma();
+            const T norma = v.norma(v);
             return Vec3<T>(v / norma);
         }
         Vec3<T> operator * (const Matrix4<T>& m) const 
@@ -85,7 +87,7 @@ template <typename T> class Point3
         Point3(T _x): x(T(_x)), y(T(_x)), z(T(_x)) {}
         Point3(T _x, T _y, T _z): x(T(_x)), y(T(_y)), z(T(_z)) {}
         Point3<T> operator + (const Vec3<T>& v) const { return Point3<T>(x + v.x, y + v.y, z + v.z); }
-        Point3<T> operator - (const Vec3<T>& v) const { return Point3<T>(x - v.x, y - v.y, z - z.v); }
+        Point3<T> operator - (const Vec3<T>& v) const { return Point3<T>(x - v.x, y - v.y, z - v.z); }
         Point3<T> operator * (const T& t) const { return Point3<T>(x*t, y*t, z*t); }
         T operator ^ (const Point3<T>& p) const { return (x*p.x) + (y*p.y) + (z*p.z); }
         Point3<T> operator * (const Matrix4<T>& m) const 
@@ -118,7 +120,7 @@ class Ray {
         Point3D origin;
         Vec3D direction;
         Ray(void);                              // default constructor
-        Ray(const Point3D& o, const Vec3D& dir);// constructor
+        Ray(const Point3D& o, const Vec3D& dir): origin(o), direction(dir) {}// constructor
         Ray(const Ray& ray);                    // copy constructor
         Ray& operator= (const Ray& rhs);        // assignment operator
         ~Ray() {}                               // destructor
@@ -141,9 +143,11 @@ HitInfo::HitInfo():hit_object(false),hit_location(),normal(),surface_color() {} 
 class Object 
 {
     public:
+        Vec3D color;
         Object() {}
         virtual ~Object() {}
         virtual bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const = 0;
+        virtual Vec3D getColor() const = 0;
 };
 
 class Sphere: public Object 
@@ -156,13 +160,13 @@ class Sphere: public Object
         ~Sphere() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const
         {
-            double a = pow(ray.direction.norma(ray.direction), 2);
-            double b = ((ray.origin - this->center) * ray.direction) * 2;
-            double c = ((this->center ^ this->center) + (ray.origin ^ ray.origin)) + (-2)*(ray.origin ^ this->center) - (this->radius*this->radius);
-            double delta = (b*b) - 4*a*c; 
+            double a = pow(ray.direction.norma(ray.direction), 2.0);
+            double b = ((ray.origin - this->center) * ray.direction) * 2.0;
+            double c = ((this->center ^ this->center) + (ray.origin ^ ray.origin)) + (-2.0)*(ray.origin ^ this->center) - (this->radius*this->radius);
+            double delta = (b*b) - 4.0*a*c; 
             if (delta == 0.0)
             {
-                double t = (b*b)/2*a;
+                double t = (b*b)/(2.0*a);
                 if (t > kEpsilon)
                 {
                     tmin = t;
@@ -174,9 +178,9 @@ class Sphere: public Object
             else if (delta > 0.0)
             {
                 double sqrtDelta = pow(delta, 0.5);
-                double t1 = ((b*b) + sqrtDelta)/2*a;
-                double t2 = ((b*b) - sqrtDelta)/2*a;
-                if (t1 > t2 && t1 > kEpsilon)
+                double t1 = (((-1)*b) + sqrtDelta)/(2.0*a);
+                double t2 = (((-1)*b) - sqrtDelta)/(2.0*a);
+                if (t1 < t2 && t1 > kEpsilon)
                 {
                     tmin = t1;
                     return (true);
@@ -189,6 +193,10 @@ class Sphere: public Object
                 return false;
             }
             return (false);
+        }
+        Vec3D getColor() const
+        {
+            return this->color;
         }
 };
 
@@ -205,13 +213,17 @@ class Plane: public Object
             double t = ((pp - ray.origin) * this->normal) / (ray.direction * this->normal);
             if (t > kEpsilon)
             {
-                tmin = tmin;
+                tmin = t;
                 info.hit_location = ray.origin + ray.direction*tmin;
                 return (true);
 
             } else {
                 return (false);
             }
+        }
+        Vec3D getColor() const
+        {
+            return this->color;
         }
 };
 
@@ -238,9 +250,12 @@ class Triangle: public Object
                 pHit = info.hit_location;
                 double gama = (pHit.z - ((pHit.x*A.z)/A.x) - ((((pHit.y*A.x) - (A.y*pHit.x))/((B.y*A.x) - (A.y*B.x)))*(B.z - (B.x*A.z)/A.x)))/((((A.y*C.x) - (C.y*A.x))/((B.y*A.x) - (A.y*B.x)))*(B.z - (B.x*A.z)/A.x) + (C.z - (C.x*A.z)/A.x));
                 double beta = ((pHit.y*A.x) - (gama*C.y*A.x) + (A.y*gama*C.x) - (A.y*pHit.x))/((B.y*A.x) - (A.y*B.x));
-                double alpha = ((pHit.x) - (beta*B.x) - (alpha*C.x))/A.x;
-                if (alpha + beta + gama == 1)
-                {
+                double alpha = ((pHit.x) - (beta*B.x) - (gama*C.x))/A.x;
+                double ABGsum = alpha + beta + gama;
+                if (ABGsum <= 1.0 + kEpsilon && ABGsum >= 1.0 - kEpsilon)
+                {   
+                    if (alpha > 1.0 || beta > 1.0 || gama > 1.0) return (false);
+                    if (alpha < 0.0 || beta < 0.0 || gama < 0.0) return (false);
                     return (true);
                 } else {
                     return (false);
@@ -248,7 +263,10 @@ class Triangle: public Object
             } else {
                 return 0;
             }
-
+        }
+        Vec3D getColor() const
+        {
+            return this->color;
         }
 };
 
@@ -262,14 +280,21 @@ class Line: public Object
         ~Line() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& hit) const
         {
-            double t = (((origin.y - ray.origin.y)*direction.x) + ((ray.origin.x - origin.x)*direction.y))/((direction.x - direction.y)*ray.direction.x);
-
-            if (t > kEpsilon)
+            double dividend = ((ray.origin.y - origin.y) + (direction.y/direction.x)*(origin.x - ray.origin.x));
+            double divisor = (((ray.direction.x*direction.y)/direction.x) - ray.direction.y);
+            double t = dividend/divisor;
+            double s = (ray.origin.x - origin.x + (t*ray.direction.x))/direction.x;
+            double result = origin.z - ray.origin.z + s*direction.z - t*ray.direction.x;
+            if (result == 0 && t > kEpsilon)
             {
                 tmin = t;
                 return (true);
-            } 
-            return 1;
+            }
+            return (false);
+        }
+        Vec3D getColor() const
+        {
+            return this->color;
         }
 };
 
@@ -286,28 +311,93 @@ class Camera
 {
     public:
         int hr, vr;
-        float distance;
-        Vec3D up, toScreen;
+        double distance, pixelsize, pixelQtnH, pixelQtnV;
+        Vec3D up, toScreen, u, v, w, right, iup;
         Point3D cameraPos;
-        Camera(int _hr, int _vr, float d, Vec3D _up, Vec3D _toScreen, Point3D pos): hr(_hr), vr(_vr), distance(d), up(_up), toScreen(_toScreen), cameraPos(pos) {} 
+        Camera(int _hr, int _vr, double d, Vec3D _up, Vec3D _toScreen, Point3D pos): hr(_hr), vr(_vr), distance(d), up(_up), toScreen(_toScreen), cameraPos(pos) {} 
+        void makeCamera(double pixel)
+        {
+            pixelsize = pixel;
+            pixelQtnH = (double)hr/pixelsize;
+            pixelQtnV = (double)vr/pixelsize;
+            toScreen = toScreen.normalize(toScreen);  
+            w = (toScreen*(-1.0))/toScreen.norma(toScreen);
+            u = u.normalize((w ^ up));
+            v = u ^ w;
+            right =  u*(2.0/pixelQtnH);
+            iup = v*(2.0/pixelQtnH); 
+        }
         ~Camera() {}
 };
 
+Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, HitInfo& hit)
+{
+    double t = infinity;
+    double tmin = infinity;
+    Ray *ray = new Ray(origin, pixel - origin);
+    Vec3D color;
+    for (int i = 0; i < objetos.size(); i++)
+    {
+        if (objetos[i]->rayObjectIntersect(*ray, t, hit))
+        {
+            if (t < tmin)
+            {
+                tmin = t;
+                color = objetos[i]->getColor();
+            }
+        }
+    }
+    if (tmin == infinity)
+    {
+        return Vec3D(255.0, 50.0, 120.0);
+    }
+    return color;
+}
+
 void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& camera)
 {
-    // to wach pixel on the screen call trace()
+    Vec3D toPixel = camera.w*(-1.0)*camera.distance + camera.u*(-1.0) + camera.v - camera.iup;
+    Point3D screenP = camera.cameraPos + toPixel;
+    Vec3D down;
+    HitInfo *hInfo = new HitInfo();
+    std::vector<Vec3D> pixels;
+    for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
+    {
+        if (i == 600*300 - 300)
+        {
+            int fr = 10;
+        }
+        if ((i + 1) % (int)camera.pixelQtnH == 0)
+        {
+            down = down - camera.iup;
+            screenP = camera.cameraPos + toPixel;
+            screenP = screenP + down + camera.right;
+        } else {
+            screenP = screenP + camera.right;
+        }
+        pixels.push_back(trace(camera.cameraPos, screenP, objetos, *hInfo));
+    }
+    std::ofstream pixelOutput("./image.ppm", std::ios::out | std::ios::binary);
+    pixelOutput << "P6\n" << camera.pixelQtnH << " " << camera.pixelQtnV << "\n255\n";
+    for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
+    {
+        pixelOutput <<(unsigned char)(std::max(double(1), pixels[i].x)) <<
+            (unsigned char)(std::max(double(1), pixels[i].y)) <<
+            (unsigned char)(std::max(double(1), pixels[i].z));
+    }
+    pixelOutput.close();   
 }
 
 int main()
 {
-    Matrix4D matriz = Matrix4D();
+    // Matrix4D matriz = Matrix4D();
     std::vector<Object*> objetos;
     std::vector<Light*> lights;
     Camera *camera;
     char objectType;
     bool read = true;
-    int _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
-    while (scanf("%c %i %i %i %i %i %i %i %i %i %i %i %i\n", &objectType, &_1, &_2, &_3, &_4, &_5, &_6, &_7, &_8, &_9, &_10, &_11, &_12) != EOF && read) 
+    float _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
+    while (scanf("%c %f %f %f %f %f %f %f %f %f %f %f %f\n", &objectType, &_1, &_2, &_3, &_4, &_5, &_6, &_7, &_8, &_9, &_10, &_11, &_12) != EOF && read) 
     {
         switch(objectType)
         {
@@ -338,6 +428,7 @@ int main()
             case 'c':
             {
                 camera = new Camera(_1, _2, _3, Vec3D(_4, _5, _6), Vec3D(_7, _8, _9), Point3D(_10, _11, _12));
+                camera->makeCamera(1.0);
                 break;
             }
             case 'r':
