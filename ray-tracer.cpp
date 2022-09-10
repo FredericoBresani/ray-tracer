@@ -211,6 +211,10 @@ class Plane: public Object
         bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const 
         {
             double t = ((pp - ray.origin) * this->normal) / (ray.direction * this->normal);
+            Point3D location = ray.origin + ray.direction*t;
+            if (location.x > 5 || location.x < -5) return (false);
+            if (location.y > 5 || location.y < -5) return (false);
+            if (location.z > 5 || location.z < -5) return (false);
             if (t > kEpsilon)
             {
                 tmin = t;
@@ -274,23 +278,32 @@ class Line: public Object
 {
     public:
         Point3D origin;
-        Vec3D direction;
+        Vec3D direction, normal;
         Vec3D color;
         Line(Point3D o, Vec3D d, Vec3D RGB): origin(o), direction(d), color(RGB) {}
         ~Line() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& hit) const
-        {
-            double dividend = ((ray.origin.y - origin.y) + (direction.y/direction.x)*(origin.x - ray.origin.x));
-            double divisor = (((ray.direction.x*direction.y)/direction.x) - ray.direction.y);
-            double t = dividend/divisor;
-            double s = (ray.origin.x - origin.x + (t*ray.direction.x))/direction.x;
-            double result = origin.z - ray.origin.z + s*direction.z - t*ray.direction.x;
-            if (result == 0 && t > kEpsilon)
+        { 
+            double t = ((ray.origin - origin)*normal)/((normal*ray.direction)*(-1.0));
+            Point3D location = ray.origin + (ray.direction*t);
+            if (location.x > 7 || location.x < -7) return (false);
+            if (location.y > 7 || location.y < -7) return (false);
+            if (location.z > 7 || location.z < -7) return (false);
+            Vec3D toLoc = location - origin;
+            toLoc = toLoc.normalize(toLoc);
+            double cos = toLoc*(direction.normalize(direction));
+            if (t > kEpsilon && (cos >= -1.0 - 0.000002 && cos <= -1.0 + 0.000002 || cos >= 1.0 - 0.000002 && cos <= 1.0 + 0.000002))
             {
                 tmin = t;
                 return (true);
             }
             return (false);
+        }
+        void setNormal(const Point3D& C)
+        {
+            double closerT = ((origin - C)*direction*(-1.0))/(direction*direction);
+            Point3D closerP = origin + (direction*closerT);
+            this->normal = C - closerP;
         }
         Vec3D getColor() const
         {
@@ -349,7 +362,7 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
     }
     if (tmin == infinity)
     {
-        return Vec3D(255.0, 50.0, 120.0);
+        return Vec3D(121.0, 100.0, 138.0);
     }
     return color;
 }
@@ -434,6 +447,7 @@ int main()
             case 'r':
             {
                 Line *line = new Line(Point3D(_1, _2, _3), Vec3D(_4, _5, _6), Vec3D(_7, _8, _9));
+                line->setNormal(camera->cameraPos);
                 objetos.push_back(line);
                 break;
             }  
