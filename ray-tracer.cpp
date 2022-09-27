@@ -431,14 +431,15 @@ class Camera
             pixelQtnH = (double)hr/pixelsize;
             pixelQtnV = (double)vr/pixelsize;
             toScreen = toScreen.normalize(toScreen);  
-            w = (toScreen*(-1.0))/toScreen.norma(toScreen);
+            w = (toScreen*(1.0))/toScreen.norma(toScreen);
             Vec3D WUP = w ^ up;
             if (WUP.x == 0.0 && WUP.y == 0.0 && WUP.x == 0.0)
             {
                 up = Vec3D(1.0, 0.0, 0.0);
             }
-            u = u.normalize((w ^ up));
-            v = u ^ w;
+            v = up - (w*((up*w)/(w*w)));
+            v = v.normalize(v);
+            u = v ^ w;
             right =  u*(2.0/pixelQtnH);
             iup = v*(2.0/pixelQtnH); 
         }
@@ -471,7 +472,7 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
 
 void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& camera)
 {
-    Vec3D toPixel = camera.w*(-1.0)*camera.distance + camera.u*(-1.0) + camera.v - camera.iup;
+    Vec3D toPixel = camera.w*camera.distance + camera.u*(-1.0) + camera.v - (camera.iup/2.0) + (camera.right/2);
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
     HitInfo *hInfo = new HitInfo();
@@ -482,11 +483,11 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
         {
             int fr = 10;
         }
-        if ((i + 1) % (int)camera.pixelQtnH == 0)
+        if ((i) % (int)camera.pixelQtnH == 0)
         {
             down = down - camera.iup;
             screenP = camera.cameraPos + toPixel;
-            screenP = screenP + down + camera.right;
+            screenP = screenP + down;
         } else {
             screenP = screenP + camera.right;
         }
