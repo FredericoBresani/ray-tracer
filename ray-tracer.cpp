@@ -170,6 +170,9 @@ class Sphere: public Object
                 if (t > kEpsilon)
                 {
                     tmin = t;
+                    info.hit_location = ray.origin + ray.direction*tmin;
+                    info.normal = info.hit_location - center;
+                    info.normal = info.normal.normalize(info.normal);
                     return (true);
                 } else {
                     return (false);
@@ -183,11 +186,17 @@ class Sphere: public Object
                 if (t1 < t2 && t1 > kEpsilon)
                 {
                     tmin = t1;
+                    info.hit_location = ray.origin + ray.direction*tmin;
+                    info.normal = info.hit_location - center;
+                    info.normal = info.normal.normalize(info.normal);
                     return (true);
                 }
                 else if (t2 > kEpsilon)
                 {
                     tmin = t2;
+                    info.hit_location = ray.origin + ray.direction*tmin;
+                    info.normal = info.hit_location - center;
+                    info.normal = info.normal.normalize(info.normal);
                     return (true);
                 }
                 return false;
@@ -219,6 +228,7 @@ class Plane: public Object
             {
                 tmin = t;
                 info.hit_location = ray.origin + ray.direction*tmin;
+                info.normal = normal.normalize(normal);
                 return (true);
 
             } else {
@@ -391,7 +401,10 @@ class Line: public Object
             double cos = toLoc*(direction.normalize(direction));
             if (t > kEpsilon && (cos >= -1.0 - 0.000002 && cos <= -1.0 + 0.000002 || cos >= 1.0 - 0.000002 && cos <= 1.0 + 0.000002))
             {
+                Vec3D color = this->getColor();
                 tmin = t;
+                hit.hit_location = Point3D(color.x, color.y, color.z);
+                hit.normal = direction.normalize(direction);
                 return (true);
             }
             return (false);
@@ -446,6 +459,25 @@ class Camera
         ~Camera() {}
 };
 
+Vec3D setPixelColorNormal(Vec3D &normal)
+{
+    return Vec3D(std::min(double(1), normal.x), std::min(double(1), normal.y), std::min(double(1), -normal.z))*255.0;
+}
+
+Vec3D setPixelColorCoordinates(Point3D &location)
+{   
+    //x = red
+    //y = green
+    //z = blue
+    double red = 0.0, green = 0.0, blue = 0.0;
+    Vec3D aux = Vec3D(location.x, location.y, location.z)/255.0;
+    red += aux.x < 0.0 ? 0.0 : aux.x;
+    green += aux.y < 0.0 ? 0.0 : aux.y;
+    blue += aux.z < 0.0 ? 0.0 : aux.z;
+    aux = Vec3D(std::min(double(1), red*40.0), std::min(double(1), green*40.0), std::min(double(1), blue*40.0))*255.0;
+    return aux;
+}
+
 Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, HitInfo& hit)
 {
     double t = infinity;
@@ -460,6 +492,7 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             {
                 tmin = t;
                 color = objetos[i]->getColor();
+                color = setPixelColorCoordinates(hit.hit_location);
             }
         }
     }
@@ -472,7 +505,7 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
 
 void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& camera)
 {
-    Vec3D toPixel = camera.w*camera.distance + camera.u*(-1.0) + camera.v - (camera.iup/2.0) + (camera.right/2);
+    Vec3D toPixel = camera.w*camera.distance + camera.right*(-camera.pixelQtnH/2.0) + camera.iup*(camera.pixelQtnV/2.0) - (camera.iup/2.0) + (camera.right/2.0);
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
     HitInfo *hInfo = new HitInfo();
