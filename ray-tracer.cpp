@@ -492,7 +492,8 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             {
                 tmin = t;
                 color = objetos[i]->getColor();
-                color = setPixelColorCoordinates(hit.hit_location);
+                // color = setPixelColorNormal(hit.normal);
+                // color = setPixelColorCoordinates(hit.hit_location);
             }
         }
     }
