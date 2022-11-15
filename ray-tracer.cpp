@@ -435,16 +435,17 @@ class Camera
     public:
         int hr, vr;
         double distance, pixelsize, pixelQtnH, pixelQtnV;
-        Vec3D up, toScreen, u, v, w, right, iup;
-        Point3D cameraPos;
-        Camera(int _hr, int _vr, double d, Vec3D _up, Vec3D _toScreen, Point3D pos): hr(_hr), vr(_vr), distance(d), up(_up), toScreen(_toScreen), cameraPos(pos) {} 
+        Vec3D up, u, v, w, right, iup;
+        Point3D cameraPos, lookAt;
+        Camera(int _hr, int _vr, double d, Vec3D _up, Point3D pos, Point3D _lookAt): hr(_hr), vr(_vr), distance(d), up(_up), cameraPos(pos), lookAt(_lookAt) {} 
         void makeCamera(double pixel)
         {
             pixelsize = pixel;
             pixelQtnH = (double)hr/pixelsize;
             pixelQtnV = (double)vr/pixelsize;
-            toScreen = toScreen.normalize(toScreen);  
-            w = (toScreen*(1.0))/toScreen.norma(toScreen);
+            Vec3D toScreen = Vec3D();
+            toScreen = toScreen.normalize(lookAt - cameraPos);  
+            w = toScreen;
             Vec3D WUP = w ^ up;
             if (WUP.x == 0.0 && WUP.y == 0.0 && WUP.x == 0.0)
             {
@@ -491,8 +492,8 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             if (t < tmin)
             {
                 tmin = t;
-                color = objetos[i]->getColor();
-                // color = setPixelColorNormal(hit.normal);
+                // color = objetos[i]->getColor();
+                color = setPixelColorNormal(hit.normal);
                 // color = setPixelColorCoordinates(hit.hit_location);
             }
         }
@@ -577,7 +578,7 @@ int main()
             }
             case 'c':
             {
-                camera = new Camera(_1, _2, _3, Vec3D(_4, _5, _6), Vec3D(_7, _8, _9), Point3D(_10, _11, _12));
+                camera = new Camera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12));
                 camera->makeCamera(1.0);
                 break;
             }
