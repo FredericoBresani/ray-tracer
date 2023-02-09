@@ -454,8 +454,14 @@ class Camera
             v = up - (w*((up*w)/(w*w)));
             v = v.normalize(v);
             u = v ^ w;
-            right =  u*(2.0/pixelQtnH);
-            iup = v*(2.0/pixelQtnH); 
+            if (pixelQtnH <= pixelQtnV) {
+                right =  u*(2.0/pixelQtnH);
+                iup = v*(2.0/pixelQtnH); 
+            } else {
+                right =  u*(2.0/pixelQtnV);
+                iup = v*(2.0/pixelQtnV); 
+            }
+            
         }
         ~Camera() {}
 };
