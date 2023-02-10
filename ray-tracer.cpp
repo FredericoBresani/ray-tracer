@@ -15,6 +15,13 @@ template <typename T> class Matrix4
         std::vector<std::vector<T>> matrix;
         Matrix4(): matrix(std::vector<std::vector<T>>(4, std::vector<T>(4))) {}
 };
+
+template <typename T> class Matrix3
+{
+    public:
+        std::vector<std::vector<T>> matrix;
+        Matrix3(): matrix(std::vector<std::vector<T>>(3, std::vector<T>(3))) {}
+};
 template <typename T> class Vec2
 {
     public:
@@ -76,7 +83,11 @@ template <typename T> class Vec3
 
 template <typename T> class Point2
 {
-    
+    public:
+        T x, y;
+        Point2(): x(T(0)), y(T(0)) {}
+        Point2(T _x): x(_x), y(_x) {}
+        Point2(T _x, T _y): x(_x), y(_y) {} 
 };
 
 template <typename T> class Point3
@@ -112,8 +123,11 @@ template <typename T> class Point3
 typedef Vec2<double> Vec2D;
 typedef Vec3<double> Vec3D;
 typedef Point3<double> Point3D;
+typedef Point2<double> Point2D;
 typedef Matrix4<double> Matrix4D;
+typedef Matrix3<double> Matrix3D;
 typedef Vec3<double> RGBColor;
+
 
 class Ray {
     public:
@@ -440,6 +454,7 @@ class Camera
         Camera(int _hr, int _vr, double d, Vec3D _up, Point3D pos, Point3D _lookAt): hr(_hr), vr(_vr), distance(d), up(_up), cameraPos(pos), lookAt(_lookAt) {} 
         void makeCamera(double pixel)
         {
+            // Tha camera base should follow this order {w = z, v = y, u = x}
             pixelsize = pixel;
             pixelQtnH = (double)hr/pixelsize;
             pixelQtnV = (double)vr/pixelsize;
@@ -464,6 +479,20 @@ class Camera
             
         }
         ~Camera() {}
+
+        Point3D worldToCameraCoordinates(Point3D point)
+        {
+            double x = (w.x*(point.x)) + (w.y*(point.y)) + (w.z*(point.z));
+            double y = (v.x*(point.x)) + (v.y*(point.y)) + (v.z*(point.z));
+            double z = (u.x*(point.x)) + (u.y*(point.y)) + (u.z*(point.z));
+            return Point3D(z, y, x); // Remenber that the base order is like that
+        }
+
+        Point2D worldToScreenCoordinates(Point3D point) //this is a point on the screen already, althoug in world coordinates
+        {                                               //that is why no projection is needed
+            Point3D cameraCoordinates = Camera::worldToCameraCoordinates(point);
+            return Point2D(cameraCoordinates.x, cameraCoordinates.y);
+        }
 };
 
 Vec3D setPixelColorNormal(Vec3D &normal)
@@ -485,7 +514,7 @@ Vec3D setPixelColorCoordinates(Point3D &location)
     return aux;
 }
 
-Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, HitInfo& hit)
+Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, HitInfo& hit, Camera *camera)
 {
     double t = infinity;
     double tmin = infinity;
@@ -506,7 +535,17 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
     }
     if (tmin == infinity)
     {
-        return Vec3D(121.0, 100.0, 138.0);
+        Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel);
+        double maxScreen = 0;
+        if (camera->hr >= camera->vr) {
+            maxScreen = double(camera->hr)/double(camera->vr);
+        } else {
+            maxScreen = double(camera->vr)/double(camera->hr);
+        }
+        double yNormalization = std::abs(screenCoordinates.y)/maxScreen;
+        double xNormalization = std::abs(screenCoordinates.x)/maxScreen;
+        double atenuation = 2.0*(1.0 - yNormalization);
+        return Vec3D(121.0, 100.0, 138.0)/(atenuation >= 1.0 ? atenuation : 1.0);
     }
     return color;
 }
@@ -532,7 +571,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
         } else {
             screenP = screenP + camera.right;
         }
-        pixels.push_back(trace(camera.cameraPos, screenP, objetos, *hInfo));
+        pixels.push_back(trace(camera.cameraPos, screenP, objetos, *hInfo, &camera));
     }
     std::ofstream pixelOutput("./image.ppm", std::ios::out | std::ios::binary);
     pixelOutput << "P6\n" << camera.pixelQtnH << " " << camera.pixelQtnV << "\n255\n";
