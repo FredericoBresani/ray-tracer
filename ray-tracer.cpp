@@ -497,7 +497,7 @@ class Camera
 
 Vec3D setPixelColorNormal(Vec3D &normal)
 {
-    return Vec3D(std::min(double(1), normal.x), std::min(double(1), normal.y), std::min(double(1), -normal.z))*255.0;
+    return Vec3D(std::min(double(1), normal.x), std::min(double(1), normal.y), std::min(double(1), -normal.z))*210.0;
 }
 
 Vec3D setPixelColorCoordinates(Point3D &location)
@@ -514,7 +514,38 @@ Vec3D setPixelColorCoordinates(Point3D &location)
     return aux;
 }
 
-Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, HitInfo& hit, Camera *camera)
+Vec3D setBackgroundSmoothness(Point3D pixel, Camera *camera) 
+{
+    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel);
+    double maxScreen = 0, x = 0, y = 0;
+    if (camera->hr >= camera->vr) {
+        maxScreen = double(camera->hr)/double(camera->vr);
+        y = (1.0 + std::abs(screenCoordinates.y))/2.0;
+    } else {
+        maxScreen = double(camera->vr)/double(camera->hr);
+        y = (maxScreen + std::abs(screenCoordinates.y))/(2.0*maxScreen);
+    }
+    return Vec3D(121.0, 100.0, 138.0)*y;
+}
+
+Vec3D setBackgroundRGBCoordinates(Point3D pixel, Camera *camera) 
+{
+    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel);
+    double maxScreen = 0, x = 0, y = 0;
+    if (camera->hr >= camera->vr) {
+        maxScreen = double(camera->hr)/double(camera->vr);
+        x = (maxScreen + screenCoordinates.x)/(2.0*maxScreen);
+        y = (1.0 + screenCoordinates.y)/2.0;
+    } else {
+        maxScreen = double(camera->vr)/double(camera->hr);
+        x = (1.0 + screenCoordinates.x)/2.0;
+        y = (maxScreen + screenCoordinates.y)/(2.0*maxScreen);
+    }
+    
+    return Vec3D(255.0*x, 255.0*y, 60.0);
+}
+
+Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, HitInfo& hit, Camera camera)
 {
     double t = infinity;
     double tmin = infinity;
@@ -535,34 +566,23 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
     }
     if (tmin == infinity)
     {
-        Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel);
-        double maxScreen = 0;
-        if (camera->hr >= camera->vr) {
-            maxScreen = double(camera->hr)/double(camera->vr);
-        } else {
-            maxScreen = double(camera->vr)/double(camera->hr);
-        }
-        double yNormalization = std::abs(screenCoordinates.y)/maxScreen;
-        double xNormalization = std::abs(screenCoordinates.x)/maxScreen;
-        double atenuation = 2.0*(1.0 - yNormalization);
-        return Vec3D(121.0, 100.0, 138.0)/(atenuation >= 1.0 ? atenuation : 1.0);
+        return setBackgroundSmoothness(pixel, &camera);
+        // return setBackgroundRGBCoordinates(pixel, &camera);
+        // return Vec3D(121.0, 100.0, 138.0);
     }
     return color;
 }
 
 void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& camera)
 {
-    Vec3D toPixel = camera.w*camera.distance + camera.right*(-camera.pixelQtnH/2.0) + camera.iup*(camera.pixelQtnV/2.0) - (camera.iup/2.0) + (camera.right/2.0);
+    Vec3D toPixel = camera.w*camera.distance + camera.right*(-camera.pixelQtnH/2.0) + camera.iup*(camera.pixelQtnV/2.0);/* - (camera.iup/2.0) + (camera.right/2.0)*/ //while using anti-aliasing there is no need to be in the center of the pixel
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
     HitInfo *hInfo = new HitInfo();
+    int antiSamples = 3;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
     {
-        if (i == 400*195 - 180)
-        {
-            int fr = 10;
-        }
         if ((i) % (int)camera.pixelQtnH == 0)
         {
             down = down - camera.iup;
@@ -571,7 +591,25 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
         } else {
             screenP = screenP + camera.right;
         }
-        pixels.push_back(trace(camera.cameraPos, screenP, objetos, *hInfo, &camera));
+        //anti-aliasing
+        Vec3D sum;
+        Vec3D sampleRight = camera.right/(double)antiSamples;
+        Vec3D sampleUp = camera.iup/(double)antiSamples;
+        Point3D sampledPixel = screenP + sampleRight/2.0 - sampleUp/2.0;
+        for(int iSamples = 0; iSamples < antiSamples; iSamples++)
+        {
+            for(int jSamples = 0; jSamples < antiSamples; jSamples++)
+            {
+                sum = sum + trace(camera.cameraPos, sampledPixel, objetos, *hInfo, camera);
+                if (jSamples == antiSamples - 1) {
+                    sampledPixel = sampledPixel - sampleRight*(antiSamples - 1) - sampleUp;
+                } else {
+                    sampledPixel = sampledPixel + sampleRight;
+                }
+                
+            }
+        }
+        pixels.push_back(sum/(double)(antiSamples*antiSamples));
     }
     std::ofstream pixelOutput("./image.ppm", std::ios::out | std::ios::binary);
     pixelOutput << "P6\n" << camera.pixelQtnH << " " << camera.pixelQtnV << "\n255\n";
