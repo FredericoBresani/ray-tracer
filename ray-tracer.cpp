@@ -144,15 +144,12 @@ class HitInfo {
     public:
         bool hit_object;
         Point3D hit_location;
-        Vec3D normal;
+        Vec3D normal, toLight, toCamera, reflection, refraction;
         RGBColor surface_color;
-        HitInfo(void);
-        HitInfo(const HitInfo& hitInfo);
-        ~HitInfo(void);
-        HitInfo& operator= (const HitInfo& rhs);
+        double difuseK, specularK, lightIntensity, ambientLightIntensity, reflectiveAmbienteK;
+        HitInfo() {}
+        ~HitInfo() {}
 };
-
-HitInfo::HitInfo():hit_object(false),hit_location(),normal(),surface_color() {} // constructor
 
 class Object 
 {
@@ -169,8 +166,8 @@ class Sphere: public Object
     public:
         Point3D center;
         Vec3D color;
-        double radius;
-        Sphere(Point3D c, Vec3D RGB, double r): center(c), color(RGB), radius(r) {}
+        double radius, difuseK, specularK;
+        Sphere(Point3D c, Vec3D RGB, double r, double difuse, double specular): center(c), color(RGB), radius(r), difuseK(difuse), specularK(specular) {}
         ~Sphere() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const
         {
@@ -181,12 +178,15 @@ class Sphere: public Object
             if (delta == 0.0)
             {
                 double t = (b*b)/(2.0*a);
-                if (t > kEpsilon)
+                if (t > kEpsilon && t < tmin)
                 {
                     tmin = t;
                     info.hit_location = ray.origin + ray.direction*tmin;
                     info.normal = info.hit_location - center;
                     info.normal = info.normal.normalize(info.normal);
+                    info.difuseK = difuseK;
+                    info.specularK = specularK;
+                    info.surface_color = color;
                     return (true);
                 } else {
                     return (false);
@@ -197,20 +197,26 @@ class Sphere: public Object
                 double sqrtDelta = pow(delta, 0.5);
                 double t1 = (((-1)*b) + sqrtDelta)/(2.0*a);
                 double t2 = (((-1)*b) - sqrtDelta)/(2.0*a);
-                if (t1 < t2 && t1 > kEpsilon)
+                if ((t1 < t2) && (t1 > kEpsilon) && (t1 < tmin))
                 {
                     tmin = t1;
                     info.hit_location = ray.origin + ray.direction*tmin;
                     info.normal = info.hit_location - center;
                     info.normal = info.normal.normalize(info.normal);
+                    info.difuseK = difuseK;
+                    info.specularK = specularK;
+                    info.surface_color = color;
                     return (true);
                 }
-                else if (t2 > kEpsilon)
+                else if (t2 > kEpsilon && t2 < tmin)
                 {
                     tmin = t2;
                     info.hit_location = ray.origin + ray.direction*tmin;
                     info.normal = info.hit_location - center;
                     info.normal = info.normal.normalize(info.normal);
+                    info.difuseK = difuseK;
+                    info.specularK = specularK;
+                    info.surface_color = color;
                     return (true);
                 }
                 return false;
@@ -235,10 +241,7 @@ class Plane: public Object
         {
             double t = ((pp - ray.origin) * this->normal) / (ray.direction * this->normal);
             Point3D location = ray.origin + ray.direction*t;
-            if (location.x > 5 || location.x < -5) return (false);
-            if (location.y > 5 || location.y < -5) return (false);
-            if (location.z > 5 || location.z < -5) return (false);
-            if (t > kEpsilon)
+            if (t > kEpsilon && t < tmin)
             {
                 tmin = t;
                 info.hit_location = ray.origin + ray.direction*tmin;
@@ -275,7 +278,8 @@ class Triangle: public Object
             Point3D pHit;
             if (tPlane->rayObjectIntersect(ray, tmin, info)) 
             {   
-                pHit = info.hit_location;       
+                pHit = info.hit_location;  
+                info.normal = tPlaneNormal.normalize(tPlaneNormal);     
                 Vec3D temp;                     // _      _  _     _
                 Vec3D v0 = Vec3D(A.x, B.x, C.x);//|a1 b1 c1||a|   |X|
                 Vec3D v1 = Vec3D(A.y, B.y, C.y);//|a2 b2 c2||b| = |Y|
@@ -413,7 +417,7 @@ class Line: public Object
             Vec3D toLoc = location - origin;
             toLoc = toLoc.normalize(toLoc);
             double cos = toLoc*(direction.normalize(direction));
-            if (t > kEpsilon && (cos >= -1.0 - 0.000002 && cos <= -1.0 + 0.000002 || cos >= 1.0 - 0.000002 && cos <= 1.0 + 0.000002))
+            if (t > kEpsilon && t < tmin && (cos >= -1.0 - 0.000002 && cos <= -1.0 + 0.000002 || cos >= 1.0 - 0.000002 && cos <= 1.0 + 0.000002))
             {
                 Vec3D color = this->getColor();
                 tmin = t;
@@ -440,10 +444,18 @@ class Light
     public:
         Point3D lightPos;
         Vec3D lightColor;
-        Light(Point3D pos, Vec3D color): lightPos(pos), lightColor(color) {}
+        double intensity;
+        Light(Point3D pos, Vec3D color, double i): lightPos(pos), lightColor(color), intensity(i) {}
         ~Light() {}
 };
 
+class Ambient 
+{
+    public:
+        double reflectiveK, lightIntensity;
+        Ambient(double rK, double lK): reflectiveK(rK), lightIntensity(lK) {}
+        ~Ambient() {}
+};
 class Camera 
 {
     public:
@@ -526,9 +538,6 @@ Vec3D setBackgroundSmoothness(Point3D pixel, Camera *camera)
         maxScreen = double(camera->vr)/double(camera->hr);
         y = (maxScreen + std::abs(screenCoordinates.y))/(2.0*maxScreen);
     }
-    if (y > 1.0) {
-        int teste = 0;
-    }
     return Vec3D(135.0, 206.0, 235.0)*y;
 }
 
@@ -549,15 +558,16 @@ Vec3D setBackgroundRGBCoordinates(Point3D pixel, Camera *camera)
     return Vec3D(255.0*x, 255.0*y, 60.0);
 }
 
-Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, HitInfo& hit, Camera camera)
+Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, Camera camera, std::vector<Light*> lights, Ambient *ambient)
 {
     double t = infinity;
     double tmin = infinity;
+    HitInfo *hInfo = new HitInfo();
     Ray *ray = new Ray(origin, pixel - origin);
     Vec3D color;
     for (int i = 0; i < objetos.size(); i++)
     {
-        if (objetos[i]->rayObjectIntersect(*ray, t, hit))
+        if (objetos[i]->rayObjectIntersect(*ray, t, *hInfo))
         {
             if (t < tmin)
             {
@@ -568,21 +578,33 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             }
         }
     }
+    
     if (tmin == infinity)
     {
         return setBackgroundSmoothness(pixel, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
         // return Vec3D(121.0, 100.0, 138.0);
+    } else {
+        double difuseIndice = 0;
+        hInfo->toCamera = camera.cameraPos - hInfo->hit_location;
+        hInfo->toCamera = hInfo->toCamera.normalize(hInfo->toCamera);
+        for (int l = 0; l < lights.size(); l++) {
+            hInfo->toLight = lights[l]->lightPos - hInfo->hit_location;
+            hInfo->toLight = hInfo->toLight.normalize(hInfo->toLight);
+            hInfo->reflection = ((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight;
+            hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
+            difuseIndice += std::max(lights[l]->intensity*(hInfo->difuseK*(hInfo->normal*hInfo->toLight)), 0.0);
+        }
+        color = color*(std::min((ambient->lightIntensity*ambient->reflectiveK) + difuseIndice, 1.0));
     }
     return color;
 }
 
-void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& camera)
+void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& camera, Ambient& ambient)
 {
     Vec3D toPixel = camera.w*camera.distance + camera.right*(-camera.pixelQtnH/2.0) + camera.iup*(camera.pixelQtnV/2.0);/* - (camera.iup/2.0) + (camera.right/2.0)*/ //while using anti-aliasing there is no need to be in the center of the pixel
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
-    HitInfo *hInfo = new HitInfo();
     int antiSamples = 3;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
@@ -604,7 +626,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
         {
             for(int jSamples = 0; jSamples < antiSamples; jSamples++)
             {
-                sum = sum + trace(camera.cameraPos, sampledPixel, objetos, *hInfo, camera);
+                sum = sum + trace(camera.cameraPos, sampledPixel, objetos, camera, lights, &ambient);
                 if (jSamples == antiSamples - 1) {
                     sampledPixel = sampledPixel - sampleRight*(antiSamples - 1) - sampleUp;
                 } else {
@@ -632,6 +654,7 @@ int main()
     std::vector<Object*> objetos;
     std::vector<Light*> lights;
     Camera *camera;
+    Ambient *ambient;
     char objectType;
     bool read = true;
     float _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
@@ -641,7 +664,7 @@ int main()
         {
             case 's': 
             {
-                Sphere *e = new Sphere(Point3D(_1, _2, _3), Vec3D(_5, _6, _7), _4);
+                Sphere *e = new Sphere(Point3D(_1, _2, _3), Vec3D(_5, _6, _7), _4, _8, _9);
                 objetos.push_back(e);
                 break;    
             }
@@ -659,7 +682,7 @@ int main()
             }
             case 'l':
             {
-                Light *l = new Light(Point3D(_1, _2, _3), Vec3D(_4, _5, _6));
+                Light *l = new Light(Point3D(_1, _2, _3), Vec3D(_4, _5, _6), _7);
                 lights.push_back(l);
                 break;
             }
@@ -676,6 +699,11 @@ int main()
                 objetos.push_back(line);
                 break;
             }  
+            case 'a':
+            {
+                ambient = new Ambient(_1, _2);
+                break;
+            }
             default:
             {
                 read = false;
@@ -683,6 +711,6 @@ int main()
             }
         }
     }
-    render(objetos, lights, *camera);
+    render(objetos, lights, *camera, *ambient);
     return 0;
 }
