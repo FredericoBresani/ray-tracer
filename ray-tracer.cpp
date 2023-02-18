@@ -480,17 +480,18 @@ class Camera
         }
         ~Camera() {}
 
-        Point3D worldToCameraCoordinates(Point3D point)
+        Point3D worldToCameraCoordinates(Point3D point, Point3D cameraPosition)
         {
-            double x = (w.x*(point.x)) + (w.y*(point.y)) + (w.z*(point.z));
-            double y = (v.x*(point.x)) + (v.y*(point.y)) + (v.z*(point.z));
-            double z = (u.x*(point.x)) + (u.y*(point.y)) + (u.z*(point.z));
+            Vec3D worldPoint = point - cameraPos; // litle cheating here, using a vector as a point
+            double x = (w.x*(worldPoint.x)) + (w.y*(worldPoint.y)) + (w.z*(worldPoint.z));
+            double y = (v.x*(worldPoint.x)) + (v.y*(worldPoint.y)) + (v.z*(worldPoint.z));
+            double z = (u.x*(worldPoint.x)) + (u.y*(worldPoint.y)) + (u.z*(worldPoint.z));
             return Point3D(z, y, x); // Remenber that the base order is like that
         }
 
-        Point2D worldToScreenCoordinates(Point3D point) //this is a point on the screen already, althoug in world coordinates
+        Point2D worldToScreenCoordinates(Point3D point, Point3D cameraLocation) //this is a point on the screen already, althoug in world coordinates
         {                                               //that is why no projection is needed
-            Point3D cameraCoordinates = Camera::worldToCameraCoordinates(point);
+            Point3D cameraCoordinates = Camera::worldToCameraCoordinates(point, cameraLocation);
             return Point2D(cameraCoordinates.x, cameraCoordinates.y);
         }
 };
@@ -516,7 +517,7 @@ Vec3D setPixelColorCoordinates(Point3D &location)
 
 Vec3D setBackgroundSmoothness(Point3D pixel, Camera *camera) 
 {
-    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel);
+    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, camera->cameraPos);
     double maxScreen = 0, x = 0, y = 0;
     if (camera->hr >= camera->vr) {
         maxScreen = double(camera->hr)/double(camera->vr);
@@ -525,12 +526,15 @@ Vec3D setBackgroundSmoothness(Point3D pixel, Camera *camera)
         maxScreen = double(camera->vr)/double(camera->hr);
         y = (maxScreen + std::abs(screenCoordinates.y))/(2.0*maxScreen);
     }
-    return Vec3D(121.0, 100.0, 138.0)*y;
+    if (y > 1.0) {
+        int teste = 0;
+    }
+    return Vec3D(135.0, 206.0, 235.0)*y;
 }
 
 Vec3D setBackgroundRGBCoordinates(Point3D pixel, Camera *camera) 
 {
-    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel);
+    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, camera->cameraPos);
     double maxScreen = 0, x = 0, y = 0;
     if (camera->hr >= camera->vr) {
         maxScreen = double(camera->hr)/double(camera->vr);
@@ -558,8 +562,8 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             if (t < tmin)
             {
                 tmin = t;
-                // color = objetos[i]->getColor();
-                color = setPixelColorNormal(hit.normal);
+                color = objetos[i]->getColor();
+                // color = setPixelColorNormal(hit.normal);
                 // color = setPixelColorCoordinates(hit.hit_location);
             }
         }
