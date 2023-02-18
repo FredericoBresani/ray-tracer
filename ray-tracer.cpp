@@ -595,7 +595,7 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
             difuseIndice += std::max(lights[l]->intensity*(hInfo->difuseK*(hInfo->normal*hInfo->toLight)), 0.0);
         }
-        color = color*(std::min((ambient->lightIntensity*ambient->reflectiveK) + difuseIndice, 1.0));
+        color = color*std::min((ambient->lightIntensity*ambient->reflectiveK) + difuseIndice, 1.0);
     }
     return color;
 }
