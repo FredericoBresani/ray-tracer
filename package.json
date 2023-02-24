@@ -9,7 +9,8 @@
     "buildRun:macos": "clang++ ray-tracer.cpp -std=c++17 -o ray-tracer && ./ray-tracer < input.txt > output.txt",
     "debug:macos": "",
 
-    "build:windows": "",
+    "build:windows": "g++ ray-tracer.cpp -o ray-tracer",
+    "buildRun:windows": "g++ ray-tracer.cpp -std=c++17 -o ray-tracer && ray-tracer < sphere-over-sphere.txt > output.txt",
     "exec:windows": "",
     "debug:windows": "",
 
