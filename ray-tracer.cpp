@@ -155,10 +155,17 @@ class Object
 {
     public:
         Vec3D color;
+        double radius, difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
         Object() {}
         virtual ~Object() {}
         virtual bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const = 0;
         virtual Vec3D getColor() const = 0;
+        virtual double getKd() const = 0;
+        virtual double getKs() const = 0;
+        virtual double getKa() const = 0;
+        virtual double getKr() const = 0;
+        virtual double getKt() const = 0;
+        virtual double getPhongExp() const = 0;
 };
 
 class Sphere: public Object 
@@ -166,8 +173,8 @@ class Sphere: public Object
     public:
         Point3D center;
         Vec3D color;
-        double radius, difuseK, specularK;
-        Sphere(Point3D c, Vec3D RGB, double r, double difuse, double specular): center(c), color(RGB), radius(r), difuseK(difuse), specularK(specular) {}
+        double radius, difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
+        Sphere(Point3D c, Vec3D RGB, double r, double difuse, double specular, double ambient, double reflection, double transmission, double phong): center(c), color(RGB), radius(r), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Sphere() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const
         {
@@ -227,6 +234,30 @@ class Sphere: public Object
         {
             return this->color;
         }
+        double getKd() const
+        {
+            return this->difuseK;
+        }
+        double getKs() const
+        {
+            return this->specularK;
+        }
+        double getKa() const
+        {
+            return this->ambientK;
+        }
+        double getKr() const
+        {
+            return this->reflectionK;
+        }
+        double getKt() const
+        {
+            return this->transmissionK;
+        }
+        double getPhongExp() const
+        {
+            return this->phongExp;
+        }
 };
 
 class Plane: public Object 
@@ -235,7 +266,8 @@ class Plane: public Object
         Vec3D normal;
         Point3D pp;
         Vec3D color;
-        Plane(Vec3D n, Point3D p, Vec3D RGB): normal(n), pp(p), color(RGB) {}
+        double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
+        Plane(Vec3D n, Point3D p, Vec3D RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): normal(n), pp(p), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Plane() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const 
         {
@@ -256,6 +288,30 @@ class Plane: public Object
         {
             return this->color;
         }
+        double getKd() const
+        {
+            return this->difuseK;
+        }
+        double getKs() const
+        {
+            return this->specularK;
+        }
+        double getKa() const
+        {
+            return this->ambientK;
+        }
+        double getKr() const
+        {
+            return this->reflectionK;
+        }
+        double getKt() const
+        {
+            return this->transmissionK;
+        }
+        double getPhongExp() const
+        {
+            return this->phongExp;
+        }
 };
 
 class Triangle: public Object 
@@ -265,7 +321,8 @@ class Triangle: public Object
         Point3D B;
         Point3D C;
         Vec3D color;
-        Triangle(Point3D a, Point3D b, Point3D c, Vec3D RGB): A(a), B(b), C(c), color(RGB) {}
+        double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
+        Triangle(Point3D a, Point3D b, Point3D c, Vec3D RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): A(a), B(b), C(c), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Triangle() {}
         bool rayObjectIntersect(const Ray& ray, double& tmin, HitInfo& info) const
         {
@@ -274,7 +331,7 @@ class Triangle: public Object
             {
                 tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
             }
-            Plane *tPlane = new Plane(tPlaneNormal, this->A, color);
+            Plane *tPlane = new Plane(tPlaneNormal, this->A, color, 1, 1, 1, 1, 1, 1);
             Point3D pHit;
             if (tPlane->rayObjectIntersect(ray, tmin, info)) 
             {   
@@ -397,6 +454,30 @@ class Triangle: public Object
         {
             return this->color;
         }
+        double getKd() const
+        {
+            return this->difuseK;
+        }
+        double getKs() const
+        {
+            return this->specularK;
+        }
+        double getKa() const
+        {
+            return this->ambientK;
+        }
+        double getKr() const
+        {
+            return this->reflectionK;
+        }
+        double getKt() const
+        {
+            return this->transmissionK;
+        }
+        double getPhongExp() const
+        {
+            return this->phongExp;
+        }
 };
 
 class Line: public Object 
@@ -405,6 +486,7 @@ class Line: public Object
         Point3D origin;
         Vec3D direction, normal;
         Vec3D color;
+        double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
         Line(Point3D o, Vec3D d, Vec3D RGB): origin(o), direction(d), color(RGB) {}
         ~Line() {}
         bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& hit) const
@@ -437,6 +519,30 @@ class Line: public Object
         {
             return this->color;
         }
+        double getKd() const
+        {
+            return this->difuseK;
+        }
+        double getKs() const
+        {
+            return this->specularK;
+        }
+        double getKa() const
+        {
+            return this->ambientK;
+        }
+        double getKr() const
+        {
+            return this->reflectionK;
+        }
+        double getKt() const
+        {
+            return this->transmissionK;
+        }
+        double getPhongExp() const
+        {
+            return this->phongExp;
+        }
 };
 
 class Light
@@ -444,16 +550,15 @@ class Light
     public:
         Point3D lightPos;
         Vec3D lightColor;
-        double intensity;
-        Light(Point3D pos, Vec3D color, double i): lightPos(pos), lightColor(color), intensity(i) {}
+        Light(Point3D pos, Vec3D color): lightPos(pos), lightColor(color) {}
         ~Light() {}
 };
 
 class Ambient 
 {
     public:
-        double reflectiveK, lightIntensity;
-        Ambient(double rK, double lK): reflectiveK(rK), lightIntensity(lK) {}
+        Vec3D color;
+        Ambient(Vec3D c): color(c) {}
         ~Ambient() {}
 };
 class Camera 
@@ -562,6 +667,7 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
 {
     double t = infinity;
     double tmin = infinity;
+    double kd, ks, ka, kr, kt, phongExp; 
     HitInfo *hInfo = new HitInfo();
     Ray *ray = new Ray(origin, pixel - origin);
     Vec3D color;
@@ -573,6 +679,12 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             {
                 tmin = t;
                 color = objetos[i]->getColor();
+                kd = objetos[i]->getKd();
+                ks = objetos[i]->getKs();
+                ka = objetos[i]->getKa();
+                kr = objetos[i]->getKr();
+                kt = objetos[i]->getKt();
+                phongExp = objetos[i]->getPhongExp();
                 // color = setPixelColorNormal(hit.normal);
                 // color = setPixelColorCoordinates(hit.hit_location);
             }
@@ -593,9 +705,9 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             hInfo->toLight = hInfo->toLight.normalize(hInfo->toLight);
             hInfo->reflection = ((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight;
             hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
-            difuseIndice += std::max(lights[l]->intensity*(hInfo->difuseK*(hInfo->normal*hInfo->toLight)), 0.0);
+            difuseIndice += std::max(hInfo->difuseK*(hInfo->normal*hInfo->toLight), 0.0);
         }
-        color = color*std::min((ambient->lightIntensity*ambient->reflectiveK) + difuseIndice, 1.0);
+        color = color;
     }
     return color;
 }
@@ -657,32 +769,32 @@ int main()
     Ambient *ambient;
     char objectType;
     bool read = true;
-    float _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
-    while (scanf("%c %f %f %f %f %f %f %f %f %f %f %f %f\n", &objectType, &_1, &_2, &_3, &_4, &_5, &_6, &_7, &_8, &_9, &_10, &_11, &_12) != EOF && read) 
+    float _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18;
+    while (scanf("%c %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", &objectType, &_1, &_2, &_3, &_4, &_5, &_6, &_7, &_8, &_9, &_10, &_11, &_12, &_13, &_14, &_15, &_16, &_17, &_18) != EOF && read) 
     {
         switch(objectType)
         {
             case 's': 
             {
-                Sphere *e = new Sphere(Point3D(_1, _2, _3), Vec3D(_5, _6, _7), _4, _8, _9);
+                Sphere *e = new Sphere(Point3D(_1, _2, _3), Vec3D(_5, _6, _7), _4, _8, _9, _10, _11, _12, _13);
                 objetos.push_back(e);
                 break;    
             }
             case 'p':
             {
-                Plane *p = new Plane(Vec3D(_4, _5, _6), Point3D(_1, _2, _3), Vec3D(_7, _8, _9));
+                Plane *p = new Plane(Vec3D(_4, _5, _6), Point3D(_1, _2, _3), Vec3D(_7, _8, _9), _10, _11, _12, _13, _14, _15);
                 objetos.push_back(p);
                 break;
             }
             case 't':
             {
-                Triangle *t = new Triangle(Point3D(_1, _2, _3), Point3D(_4, _5, _6), Point3D(_7, _8, _9), Vec3D(_10, _11, _12));
+                Triangle *t = new Triangle(Point3D(_1, _2, _3), Point3D(_4, _5, _6), Point3D(_7, _8, _9), Vec3D(_10, _11, _12), _13, _14, _15, _16, _17, _18);
                 objetos.push_back(t);
                 break;
             }
             case 'l':
             {
-                Light *l = new Light(Point3D(_1, _2, _3), Vec3D(_4, _5, _6), _7);
+                Light *l = new Light(Point3D(_1, _2, _3), Vec3D(_4, _5, _6));
                 lights.push_back(l);
                 break;
             }
@@ -701,7 +813,7 @@ int main()
             }  
             case 'a':
             {
-                ambient = new Ambient(_1, _2);
+                ambient = new Ambient(Vec3D(_1, _2, _3));
                 break;
             }
             default:
