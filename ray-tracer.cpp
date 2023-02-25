@@ -145,8 +145,6 @@ class HitInfo {
         bool hit_object;
         Point3D hit_location;
         Vec3D normal, toLight, toCamera, reflection, refraction;
-        RGBColor surface_color;
-        double difuseK, specularK, lightIntensity, ambientLightIntensity, reflectiveAmbienteK;
         HitInfo() {}
         ~HitInfo() {}
 };
@@ -191,9 +189,6 @@ class Sphere: public Object
                     info.hit_location = ray.origin + ray.direction*tmin;
                     info.normal = info.hit_location - center;
                     info.normal = info.normal.normalize(info.normal);
-                    info.difuseK = difuseK;
-                    info.specularK = specularK;
-                    info.surface_color = color;
                     return (true);
                 } else {
                     return (false);
@@ -210,9 +205,6 @@ class Sphere: public Object
                     info.hit_location = ray.origin + ray.direction*tmin;
                     info.normal = info.hit_location - center;
                     info.normal = info.normal.normalize(info.normal);
-                    info.difuseK = difuseK;
-                    info.specularK = specularK;
-                    info.surface_color = color;
                     return (true);
                 }
                 else if (t2 > kEpsilon && t2 < tmin)
@@ -221,9 +213,6 @@ class Sphere: public Object
                     info.hit_location = ray.origin + ray.direction*tmin;
                     info.normal = info.hit_location - center;
                     info.normal = info.normal.normalize(info.normal);
-                    info.difuseK = difuseK;
-                    info.specularK = specularK;
-                    info.surface_color = color;
                     return (true);
                 }
                 return false;
@@ -697,7 +686,8 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
         // return setBackgroundRGBCoordinates(pixel, &camera);
         // return Vec3D(121.0, 100.0, 138.0);
     } else {
-        double difuseIndice = 0;
+        double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0;
+        Vec3D resultingColor, mixedColor;
         hInfo->toCamera = camera.cameraPos - hInfo->hit_location;
         hInfo->toCamera = hInfo->toCamera.normalize(hInfo->toCamera);
         for (int l = 0; l < lights.size(); l++) {
@@ -705,9 +695,10 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             hInfo->toLight = hInfo->toLight.normalize(hInfo->toLight);
             hInfo->reflection = ((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight;
             hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
-            difuseIndice += std::max(hInfo->difuseK*(hInfo->normal*hInfo->toLight), 0.0);
+            mixedColor = Vec3D(lights[l]->lightColor.x*color.x, lights[l]->lightColor.y*color.y, lights[l]->lightColor.z*color.z)/255.0;
+            resultingColor = resultingColor + mixedColor*kd*std::max(hInfo->normal*hInfo->toLight, 0.0);
         }
-        color = color;
+        color = Vec3D(std::min(resultingColor.x, 255.0), std::min(resultingColor.y, 255.0), std::min(resultingColor.z, 255.0));
     }
     return color;
 }

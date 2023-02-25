@@ -56,3 +56,9 @@ c h_res v_res d up1 up2 up3 l1 l2 l3 m1 m2 m3
 # (l1, l2, l3): the coordinates of the camera location
 # (m1, m2, m3): the coordintes of the location the the camera points at
 ```
+
+- ambient:
+a R G B
+```bash
+# (R, G, B): The ambient light color
+```
