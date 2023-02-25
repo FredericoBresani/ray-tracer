@@ -6,6 +6,7 @@
 
 #define infinity 1e8
 #define kEpsilon 10e-6
+#define M_PI 3.14159265358979323846
 
 // lets use doubles for object-ray intersection and floats for shading calculations
 
@@ -101,15 +102,12 @@ template <typename T> class Point3
         Point3<T> operator - (const Vec3<T>& v) const { return Point3<T>(x - v.x, y - v.y, z - v.z); }
         Point3<T> operator * (const T& t) const { return Point3<T>(x*t, y*t, z*t); }
         T operator ^ (const Point3<T>& p) const { return (x*p.x) + (y*p.y) + (z*p.z); }
-        Point3<T> operator * (const Matrix4<T>& m) const 
+        Point3<T> operator * (const Matrix4<T>& m) const
         {
             T _x, _y, _z;
-            for(size_t column = 0; column < m->matrix.size(); column++)
-            {
-                _x += x*m->matrix[0][column]; 
-                _y += y*m->matrix[1][column];
-                _z += z*m->matrix[2][column];
-            }
+            _x = x*m.matrix[0][0] + y*m.matrix[0][1] + z*m.matrix[0][2] + m.matrix[0][3]; 
+            _y = x*m.matrix[1][0] + y*m.matrix[1][1] + z*m.matrix[1][2] + m.matrix[1][3];
+            _z = x*m.matrix[2][0] + y*m.matrix[2][1] + z*m.matrix[2][2] + m.matrix[2][3];
             return Point3<T>(_x, _y, _z); 
         }
         Vec3<T> operator - (const Point3<T>& p) const { return Vec3<T>(x - p.x, y - p.y, z - p.z); }
@@ -597,6 +595,11 @@ class Camera
         }
         ~Camera() {}
 
+        void transformCamera(Matrix4D &matrix) 
+        {
+            cameraPos = cameraPos*matrix;
+        }
+
         Point3D worldToCameraCoordinates(Point3D point, Point3D cameraPosition)
         {
             Vec3D worldPoint = point - cameraPos; // litle cheating here, using a vector as a point
@@ -762,7 +765,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
 
 int main()
 {
-    // Matrix4D matriz = Matrix4D();
+    Matrix4D matrix = Matrix4D();
     std::vector<Object*> objetos;
     std::vector<Light*> lights;
     Camera *camera;
@@ -777,6 +780,13 @@ int main()
             case 's': 
             {
                 Sphere *e = new Sphere(Point3D(_1, _2, _3), Vec3D(_5, _6, _7), _4, _8, _9, _10, _11, _12, _13);
+                if (objetos.size() == 0) {
+                    matrix.matrix[0] = {1.0, 0.0, 0.0, 1.0};
+                    matrix.matrix[1] = {0.0, 1.0, 0.0, 1.0};
+                    matrix.matrix[2] = {0.0, 0.0, 1.0, 0.0};
+                    matrix.matrix[3] = {0.0, 0.0, 0.0, 1.0};
+                    e->center = e->center*matrix;
+                }
                 objetos.push_back(e);
                 break;    
             }
@@ -801,6 +811,14 @@ int main()
             case 'c':
             {
                 camera = new Camera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12));
+                //1rad = 180/pi graus
+                double cos = std::cos(M_PI/6.0); 
+                double sen = std::sin(M_PI/6.0);
+                matrix.matrix[0] = {cos, 0.0, -sen, 1.0};
+                matrix.matrix[1] = {0.0, 1.0, 0.0, 4.0};
+                matrix.matrix[2] = {sen, 0.0, cos, -1.0};
+                matrix.matrix[3] = {0.0, 0.0, 0.0, 1.0};
+                camera->transformCamera(matrix);
                 camera->makeCamera(1.0);
                 break;
             }
