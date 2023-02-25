@@ -3,9 +3,11 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <stdlib.h>
 
 #define infinity 1e8
 #define kEpsilon 10e-6
+#define M_PI 3.14159265358979323846
 
 // lets use doubles for object-ray intersection and floats for shading calculations
 
@@ -101,15 +103,12 @@ template <typename T> class Point3
         Point3<T> operator - (const Vec3<T>& v) const { return Point3<T>(x - v.x, y - v.y, z - v.z); }
         Point3<T> operator * (const T& t) const { return Point3<T>(x*t, y*t, z*t); }
         T operator ^ (const Point3<T>& p) const { return (x*p.x) + (y*p.y) + (z*p.z); }
-        Point3<T> operator * (const Matrix4<T>& m) const 
+        Point3<T> operator * (const Matrix4<T>& m) const
         {
             T _x, _y, _z;
-            for(size_t column = 0; column < m->matrix.size(); column++)
-            {
-                _x += x*m->matrix[0][column]; 
-                _y += y*m->matrix[1][column];
-                _z += z*m->matrix[2][column];
-            }
+            _x = x*m.matrix[0][0] + y*m.matrix[0][1] + z*m.matrix[0][2] + m.matrix[0][3]; 
+            _y = x*m.matrix[1][0] + y*m.matrix[1][1] + z*m.matrix[1][2] + m.matrix[1][3];
+            _z = x*m.matrix[2][0] + y*m.matrix[2][1] + z*m.matrix[2][2] + m.matrix[2][3];
             return Point3<T>(_x, _y, _z); 
         }
         Vec3<T> operator - (const Point3<T>& p) const { return Vec3<T>(x - p.x, y - p.y, z - p.z); }
@@ -586,6 +585,11 @@ class Camera
         }
         ~Camera() {}
 
+        void transformCamera(Matrix4D &matrix) 
+        {
+            cameraPos = cameraPos*matrix;
+        }
+
         Point3D worldToCameraCoordinates(Point3D point, Point3D cameraPosition)
         {
             Vec3D worldPoint = point - cameraPos; // litle cheating here, using a vector as a point
@@ -652,7 +656,7 @@ Vec3D setBackgroundRGBCoordinates(Point3D pixel, Camera *camera)
     return Vec3D(255.0*x, 255.0*y, 60.0);
 }
 
-Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, Camera camera, std::vector<Light*> lights, Ambient *ambient)
+Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, Camera camera, std::vector<Light*> lights, Ambient *ambient, int depth)
 {
     double t = infinity;
     double tmin = infinity;
@@ -660,6 +664,9 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
     HitInfo *hInfo = new HitInfo();
     Ray *ray = new Ray(origin, pixel - origin);
     Vec3D color;
+    if (depth == 0) {
+        return color;
+    }
     for (int i = 0; i < objetos.size(); i++)
     {
         if (objetos[i]->rayObjectIntersect(*ray, t, *hInfo))
@@ -682,9 +689,9 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
     
     if (tmin == infinity)
     {
-        return setBackgroundSmoothness(pixel, &camera);
+        // return setBackgroundSmoothness(pixel, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
-        // return Vec3D(121.0, 100.0, 138.0);
+        return Vec3D(135.0, 206.0, 235.0);
     } else {
         double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0;
         Vec3D resultingColor, mixedColor;
@@ -698,7 +705,10 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             mixedColor = Vec3D(lights[l]->lightColor.x*color.x, lights[l]->lightColor.y*color.y, lights[l]->lightColor.z*color.z)/255.0;
             resultingColor = resultingColor + mixedColor*kd*std::max(hInfo->normal*hInfo->toLight, 0.0);
         }
-        color = Vec3D(std::min(resultingColor.x, 255.0), std::min(resultingColor.y, 255.0), std::min(resultingColor.z, 255.0));
+        Point3D hitPoint = hInfo->hit_location + hInfo->normal*0.001;
+        Point3D difusePoint = hitPoint + hInfo->reflection;
+        Vec3D difuse = trace(hitPoint, difusePoint, objetos, camera, lights, ambient, depth--);
+        color = Vec3D(std::min((resultingColor.x + difuse.x)/2.0, 255.0), std::min((resultingColor.y + difuse.y)/2.0, 255.0), std::min((resultingColor.z + difuse.z)/2.0, 255.0));
     }
     return color;
 }
@@ -729,7 +739,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
         {
             for(int jSamples = 0; jSamples < antiSamples; jSamples++)
             {
-                sum = sum + trace(camera.cameraPos, sampledPixel, objetos, camera, lights, &ambient);
+                sum = sum + trace(camera.cameraPos, sampledPixel, objetos, camera, lights, &ambient, 1);
                 if (jSamples == antiSamples - 1) {
                     sampledPixel = sampledPixel - sampleRight*(antiSamples - 1) - sampleUp;
                 } else {
@@ -753,7 +763,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
 
 int main()
 {
-    // Matrix4D matriz = Matrix4D();
+    Matrix4D matrix = Matrix4D();
     std::vector<Object*> objetos;
     std::vector<Light*> lights;
     Camera *camera;
@@ -768,6 +778,13 @@ int main()
             case 's': 
             {
                 Sphere *e = new Sphere(Point3D(_1, _2, _3), Vec3D(_5, _6, _7), _4, _8, _9, _10, _11, _12, _13);
+                if (objetos.size() == 0) {
+                    matrix.matrix[0] = {1.0, 0.0, 0.0, 1.0};
+                    matrix.matrix[1] = {0.0, 1.0, 0.0, 1.0};
+                    matrix.matrix[2] = {0.0, 0.0, 1.0, 0.0};
+                    matrix.matrix[3] = {0.0, 0.0, 0.0, 1.0};
+                    //e->center = e->center*matrix;
+                }
                 objetos.push_back(e);
                 break;    
             }
@@ -792,6 +809,14 @@ int main()
             case 'c':
             {
                 camera = new Camera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12));
+                //1rad = 180/pi graus
+                double cos = std::cos(M_PI/6.0); 
+                double sen = std::sin(M_PI/6.0);
+                matrix.matrix[0] = {cos, 0.0, -sen, 1.0};
+                matrix.matrix[1] = {0.0, 1.0, 0.0, 4.0};
+                matrix.matrix[2] = {sen, 0.0, cos, -1.0};
+                matrix.matrix[3] = {0.0, 0.0, 0.0, 1.0};
+                //camera->transformCamera(matrix);
                 camera->makeCamera(1.0);
                 break;
             }
