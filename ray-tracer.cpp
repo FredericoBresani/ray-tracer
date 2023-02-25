@@ -143,7 +143,7 @@ class HitInfo {
     public:
         bool hit_object;
         Point3D hit_location;
-        Vec3D normal, toLight, toCamera, reflection, refraction;
+        Vec3D normal, toLight, toCamera, reflection, refraction, viewerReflex;
         HitInfo() {}
         ~HitInfo() {}
 };
@@ -697,6 +697,8 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
         Vec3D resultingColor, mixedColor;
         hInfo->toCamera = camera.cameraPos - hInfo->hit_location;
         hInfo->toCamera = hInfo->toCamera.normalize(hInfo->toCamera);
+        hInfo->viewerReflex = ((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera;
+        hInfo->viewerReflex = hInfo->viewerReflex.normalize(hInfo->viewerReflex);
         for (int l = 0; l < lights.size(); l++) {
             hInfo->toLight = lights[l]->lightPos - hInfo->hit_location;
             hInfo->toLight = hInfo->toLight.normalize(hInfo->toLight);
@@ -706,9 +708,20 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             resultingColor = resultingColor + mixedColor*kd*std::max(hInfo->normal*hInfo->toLight, 0.0);
         }
         Point3D hitPoint = hInfo->hit_location + hInfo->normal*0.001;
-        Point3D difusePoint = hitPoint + hInfo->reflection;
-        Vec3D difuse = trace(hitPoint, difusePoint, objetos, camera, lights, ambient, depth--);
-        color = Vec3D(std::min((resultingColor.x + difuse.x)/2.0, 255.0), std::min((resultingColor.y + difuse.y)/2.0, 255.0), std::min((resultingColor.z + difuse.z)/2.0, 255.0));
+        Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
+        Vec3D auxReflex = auxVec^hInfo->viewerReflex;
+        Vec3D auxNormal = auxVec^hInfo->normal;
+
+        Point3D difusePixel = hitPoint + hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
+        Point3D reflexPixel = hitPoint + hInfo->viewerReflex + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
+        color = Vec3D(std::min(resultingColor.x , 255.0), std::min(resultingColor.y, 255.0), std::min(resultingColor.z, 255.0));
+        if (kr > 0) {
+            color = color + trace(hitPoint, reflexPixel, objetos, camera, lights, ambient, depth - 1);
+            color = color/2.0;
+        } else {
+            color = color + trace(hitPoint, difusePixel, objetos, camera, lights, ambient, depth - 1);
+            color = color/2.0;
+        }
     }
     return color;
 }
@@ -719,6 +732,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
     int antiSamples = 3;
+    int depth = 6;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
     {
@@ -739,7 +753,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
         {
             for(int jSamples = 0; jSamples < antiSamples; jSamples++)
             {
-                sum = sum + trace(camera.cameraPos, sampledPixel, objetos, camera, lights, &ambient, 1);
+                sum = sum + trace(camera.cameraPos, sampledPixel, objetos, camera, lights, &ambient, depth);
                 if (jSamples == antiSamples - 1) {
                     sampledPixel = sampledPixel - sampleRight*(antiSamples - 1) - sampleUp;
                 } else {
