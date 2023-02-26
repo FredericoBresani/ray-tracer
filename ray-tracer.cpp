@@ -151,7 +151,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
     int antiSamples = 3;
-    int depth = 4;
+    int depth = 2;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
     {
