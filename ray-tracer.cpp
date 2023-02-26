@@ -155,7 +155,7 @@ class Object
         double radius, difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
         Object() {}
         virtual ~Object() {}
-        virtual bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const = 0;
+        virtual bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const = 0;
         virtual Vec3D getColor() const = 0;
         virtual double getKd() const = 0;
         virtual double getKs() const = 0;
@@ -163,6 +163,7 @@ class Object
         virtual double getKr() const = 0;
         virtual double getKt() const = 0;
         virtual double getPhongExp() const = 0;
+        virtual Vec3D getNormal(const Point3D &hit, const Ray &ray) const = 0;
 };
 
 class Sphere: public Object 
@@ -171,9 +172,9 @@ class Sphere: public Object
         Point3D center;
         Vec3D color;
         double radius, difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Sphere(Point3D c, Vec3D RGB, double r, double difuse, double specular, double ambient, double reflection, double transmission, double phong): center(c), color(RGB), radius(r), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
+        Sphere(const Point3D &c, const Vec3D &RGB, double r, double difuse, double specular, double ambient, double reflection, double transmission, double phong): center(c), color(RGB), radius(r), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Sphere() {}
-        bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const
+        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const
         {
             double a = pow(ray.direction.norma(ray.direction), 2.0);
             double b = ((ray.origin - this->center) * ray.direction) * 2.0;
@@ -182,12 +183,9 @@ class Sphere: public Object
             if (delta == 0.0)
             {
                 double t = (b*b)/(2.0*a);
-                if (t > kEpsilon && t < tmin)
+                if (t > kEpsilon && t < (*tmin))
                 {
-                    tmin = t;
-                    info.hit_location = ray.origin + ray.direction*tmin;
-                    info.normal = info.hit_location - center;
-                    info.normal = info.normal.normalize(info.normal);
+                    (*tmin) = t;
                     return (true);
                 } else {
                     return (false);
@@ -198,20 +196,14 @@ class Sphere: public Object
                 double sqrtDelta = pow(delta, 0.5);
                 double t1 = (((-1)*b) + sqrtDelta)/(2.0*a);
                 double t2 = (((-1)*b) - sqrtDelta)/(2.0*a);
-                if ((t1 < t2) && (t1 > kEpsilon) && (t1 < tmin))
+                if ((t1 < t2) && (t1 > kEpsilon) && (t1 < (*tmin)))
                 {
-                    tmin = t1;
-                    info.hit_location = ray.origin + ray.direction*tmin;
-                    info.normal = info.hit_location - center;
-                    info.normal = info.normal.normalize(info.normal);
+                    (*tmin) = t1;
                     return (true);
                 }
-                else if (t2 > kEpsilon && t2 < tmin)
+                else if (t2 > kEpsilon && t2 < (*tmin))
                 {
-                    tmin = t2;
-                    info.hit_location = ray.origin + ray.direction*tmin;
-                    info.normal = info.hit_location - center;
-                    info.normal = info.normal.normalize(info.normal);
+                    (*tmin) = t2;
                     return (true);
                 }
                 return false;
@@ -246,6 +238,11 @@ class Sphere: public Object
         {
             return this->phongExp;
         }
+        Vec3D getNormal(const Point3D &hit, const Ray &ray) const
+        {
+            Vec3D normal = hit - this->center; 
+            return normal.normalize(normal);
+        }
 };
 
 class Plane: public Object 
@@ -255,17 +252,15 @@ class Plane: public Object
         Point3D pp;
         Vec3D color;
         double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Plane(Vec3D n, Point3D p, Vec3D RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): normal(n), pp(p), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
+        Plane(const Vec3D &n, const Point3D &p, const Vec3D &RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): normal(n), pp(p), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Plane() {}
-        bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& info) const 
+        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const 
         {
             double t = ((pp - ray.origin) * this->normal) / (ray.direction * this->normal);
             Point3D location = ray.origin + ray.direction*t;
-            if (t > kEpsilon && t < tmin)
+            if (t > kEpsilon && t < (*tmin))
             {
-                tmin = t;
-                info.hit_location = ray.origin + ray.direction*tmin;
-                info.normal = normal.normalize(normal);
+                (*tmin) = t;
                 return (true);
 
             } else {
@@ -300,6 +295,10 @@ class Plane: public Object
         {
             return this->phongExp;
         }
+        Vec3D getNormal(const Point3D &hit, const Ray &ray) const
+        {
+            return normal.normalize(normal);
+        }
 };
 
 class Triangle: public Object 
@@ -310,21 +309,20 @@ class Triangle: public Object
         Point3D C;
         Vec3D color;
         double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Triangle(Point3D a, Point3D b, Point3D c, Vec3D RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): A(a), B(b), C(c), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
+        Triangle(const Point3D &a, const Point3D &b, const Point3D &c, const Vec3D &RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): A(a), B(b), C(c), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Triangle() {}
-        bool rayObjectIntersect(const Ray& ray, double& tmin, HitInfo& info) const
+        bool rayObjectIntersect(const Ray& ray, double *tmin, const HitInfo& info) const
         {
             Vec3D tPlaneNormal = (this->A - this->B) ^ (this->A - this->C);
             if (((ray.direction * (-1)) * tPlaneNormal) <= 0)
             {
                 tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
             }
-            Plane *tPlane = new Plane(tPlaneNormal, this->A, color, 1, 1, 1, 1, 1, 1);
+            Plane *tPlane = new Plane(tPlaneNormal, this->A, color, 0, 0, 0, 0, 0, 0);
             Point3D pHit;
             if (tPlane->rayObjectIntersect(ray, tmin, info)) 
             {   
-                pHit = info.hit_location;  
-                info.normal = tPlaneNormal.normalize(tPlaneNormal);     
+                pHit = ray.origin + ray.direction*(*tmin);      
                 Vec3D temp;                     // _      _  _     _
                 Vec3D v0 = Vec3D(A.x, B.x, C.x);//|a1 b1 c1||a|   |X|
                 Vec3D v1 = Vec3D(A.y, B.y, C.y);//|a2 b2 c2||b| = |Y|
@@ -466,6 +464,15 @@ class Triangle: public Object
         {
             return this->phongExp;
         }
+        Vec3D getNormal(const Point3D &hit, const Ray &ray) const
+        {
+            Vec3D tPlaneNormal = (this->A - this->B) ^ (this->A - this->C);
+            if (((ray.direction * (-1)) * tPlaneNormal) <= 0)
+            {
+                tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
+            }
+            return tPlaneNormal.normalize(tPlaneNormal);
+        }
 };
 
 class Line: public Object 
@@ -475,9 +482,9 @@ class Line: public Object
         Vec3D direction, normal;
         Vec3D color;
         double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Line(Point3D o, Vec3D d, Vec3D RGB): origin(o), direction(d), color(RGB) {}
+        Line(const Point3D &o, const Vec3D &d, const Vec3D &RGB): origin(o), direction(d), color(RGB) {}
         ~Line() {}
-        bool rayObjectIntersect(const Ray &ray, double& tmin, HitInfo& hit) const
+        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& hit) const
         { 
             double t = ((ray.origin - origin)*normal)/((normal*ray.direction)*(-1.0));
             Point3D location = ray.origin + (ray.direction*t);
@@ -487,12 +494,12 @@ class Line: public Object
             Vec3D toLoc = location - origin;
             toLoc = toLoc.normalize(toLoc);
             double cos = toLoc*(direction.normalize(direction));
-            if (t > kEpsilon && t < tmin && (cos >= -1.0 - 0.000002 && cos <= -1.0 + 0.000002 || cos >= 1.0 - 0.000002 && cos <= 1.0 + 0.000002))
+            if (t > kEpsilon && t < (*tmin) && (cos >= -1.0 - 0.000002 && cos <= -1.0 + 0.000002 || cos >= 1.0 - 0.000002 && cos <= 1.0 + 0.000002))
             {
                 Vec3D color = this->getColor();
-                tmin = t;
-                hit.hit_location = Point3D(color.x, color.y, color.z);
-                hit.normal = direction.normalize(direction);
+                (*tmin) = t;
+                // hit.hit_location = Point3D(color.x, color.y, color.z);
+                // hit.normal = direction.normalize(direction);
                 return (true);
             }
             return (false);
@@ -531,6 +538,10 @@ class Line: public Object
         {
             return this->phongExp;
         }
+        Vec3D getNormal(const Point3D &hit, const Ray &ray) const
+        {
+            return Vec3D();
+        }
 };
 
 class Light
@@ -538,7 +549,7 @@ class Light
     public:
         Point3D lightPos;
         Vec3D lightColor;
-        Light(Point3D pos, Vec3D color): lightPos(pos), lightColor(color) {}
+        Light(const Point3D& pos, const Vec3D& color): lightPos(pos), lightColor(color) {}
         ~Light() {}
 };
 
@@ -546,7 +557,7 @@ class Ambient
 {
     public:
         Vec3D color;
-        Ambient(Vec3D c): color(c) {}
+        Ambient(const Vec3D &c): color(c) {}
         ~Ambient() {}
 };
 class Camera 
@@ -556,7 +567,7 @@ class Camera
         double distance, pixelsize, pixelQtnH, pixelQtnV;
         Vec3D up, u, v, w, right, iup;
         Point3D cameraPos, lookAt;
-        Camera(int _hr, int _vr, double d, Vec3D _up, Point3D pos, Point3D _lookAt): hr(_hr), vr(_vr), distance(d), up(_up), cameraPos(pos), lookAt(_lookAt) {} 
+        Camera(int _hr, int _vr, double d, const Vec3D& _up, const Point3D& pos, const Point3D &_lookAt): hr(_hr), vr(_vr), distance(d), up(_up), cameraPos(pos), lookAt(_lookAt) {} 
         void makeCamera(double pixel)
         {
             // Tha camera base should follow this order {w = z, v = y, u = x}
@@ -585,12 +596,12 @@ class Camera
         }
         ~Camera() {}
 
-        void transformCamera(Matrix4D &matrix) 
+        void transformCamera(const Matrix4D &matrix) 
         {
             cameraPos = cameraPos*matrix;
         }
 
-        Point3D worldToCameraCoordinates(Point3D point, Point3D cameraPosition)
+        Point3D worldToCameraCoordinates(const Point3D &point, const Point3D &cameraPosition)
         {
             Vec3D worldPoint = point - cameraPos; // litle cheating here, using a vector as a point
             double x = (w.x*(worldPoint.x)) + (w.y*(worldPoint.y)) + (w.z*(worldPoint.z));
@@ -599,19 +610,19 @@ class Camera
             return Point3D(z, y, x); // Remenber that the base order is like that
         }
 
-        Point2D worldToScreenCoordinates(Point3D point, Point3D cameraLocation) //this is a point on the screen already, althoug in world coordinates
+        Point2D worldToScreenCoordinates(const Point3D &point, const Point3D &cameraLocation) //this is a point on the screen already, althoug in world coordinates
         {                                               //that is why no projection is needed
             Point3D cameraCoordinates = Camera::worldToCameraCoordinates(point, cameraLocation);
             return Point2D(cameraCoordinates.x, cameraCoordinates.y);
         }
 };
 
-Vec3D setPixelColorNormal(Vec3D &normal)
+Vec3D setPixelColorNormal(const Vec3D &normal)
 {
     return Vec3D(std::min(double(1), normal.x), std::min(double(1), normal.y), std::min(double(1), -normal.z))*210.0;
 }
 
-Vec3D setPixelColorCoordinates(Point3D &location)
+Vec3D setPixelColorCoordinates(const Point3D &location)
 {   
     //x = red
     //y = green
@@ -625,7 +636,7 @@ Vec3D setPixelColorCoordinates(Point3D &location)
     return aux;
 }
 
-Vec3D setBackgroundSmoothness(Point3D pixel, Camera *camera) 
+Vec3D setBackgroundSmoothness(const Point3D &pixel, Camera *camera) 
 {
     Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, camera->cameraPos);
     double maxScreen = 0, x = 0, y = 0;
@@ -639,7 +650,7 @@ Vec3D setBackgroundSmoothness(Point3D pixel, Camera *camera)
     return Vec3D(135.0, 206.0, 235.0)*y;
 }
 
-Vec3D setBackgroundRGBCoordinates(Point3D pixel, Camera *camera) 
+Vec3D setBackgroundRGBCoordinates(const Point3D &pixel, Camera *camera) 
 {
     Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, camera->cameraPos);
     double maxScreen = 0, x = 0, y = 0;
@@ -669,11 +680,13 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
     }
     for (int i = 0; i < objetos.size(); i++)
     {
-        if (objetos[i]->rayObjectIntersect(*ray, t, *hInfo))
+        if (objetos[i]->rayObjectIntersect(*ray, &t, *hInfo))
         {
             if (t < tmin)
             {
                 tmin = t;
+                hInfo->hit_location = ray->origin + ray->direction*tmin;
+                hInfo->normal = objetos[i]->getNormal(hInfo->hit_location, *ray);
                 color = objetos[i]->getColor();
                 kd = objetos[i]->getKd();
                 ks = objetos[i]->getKs();
@@ -699,6 +712,13 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
         hInfo->toCamera = hInfo->toCamera.normalize(hInfo->toCamera);
         hInfo->viewerReflex = ((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera;
         hInfo->viewerReflex = hInfo->viewerReflex.normalize(hInfo->viewerReflex);
+        Point3D hitPoint = hInfo->hit_location + hInfo->normal*0.001;
+        Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
+        Vec3D auxReflex = auxVec^hInfo->viewerReflex;
+        Vec3D auxNormal = auxVec^hInfo->normal;
+        Vec3D colorFilter = ambient->color*ka;
+        Point3D difusePixel = hitPoint + hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
+        Point3D reflexPixel = hitPoint + (hInfo->viewerReflex*10.0) + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
         for (int l = 0; l < lights.size(); l++) {
             hInfo->toLight = lights[l]->lightPos - hInfo->hit_location;
             hInfo->toLight = hInfo->toLight.normalize(hInfo->toLight);
@@ -707,14 +727,9 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             mixedColor = Vec3D(lights[l]->lightColor.x*color.x, lights[l]->lightColor.y*color.y, lights[l]->lightColor.z*color.z)/255.0;
             resultingColor = resultingColor + mixedColor*kd*std::max(hInfo->normal*hInfo->toLight, 0.0);
         }
-        Point3D hitPoint = hInfo->hit_location + hInfo->normal*0.001;
-        Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
-        Vec3D auxReflex = auxVec^hInfo->viewerReflex;
-        Vec3D auxNormal = auxVec^hInfo->normal;
-
-        Point3D difusePixel = hitPoint + hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
-        Point3D reflexPixel = hitPoint + hInfo->viewerReflex + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
-        color = Vec3D(std::min(resultingColor.x , 255.0), std::min(resultingColor.y, 255.0), std::min(resultingColor.z, 255.0));
+         
+        color = Vec3D(colorFilter.x*resultingColor.x, colorFilter.y*resultingColor.y, colorFilter.z*resultingColor.z)/255.0;
+        color = Vec3D(std::min(color.x , 255.0), std::min(color.y, 255.0), std::min(color.z, 255.0));
         if (kr > 0) {
             color = color + trace(hitPoint, reflexPixel, objetos, camera, lights, ambient, depth - 1);
             color = color/2.0;
@@ -732,7 +747,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
     int antiSamples = 3;
-    int depth = 6;
+    int depth = 7;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
     {
