@@ -151,7 +151,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
     int antiSamples = 3;
-    int depth = 2;
+    int depth = 4;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
     {
@@ -246,7 +246,7 @@ int main()
                 double cos = std::cos(M_PI/6.0); 
                 double sen = std::sin(M_PI/6.0);
                 matrix.matrix[0] = {cos, 0.0, -sen, 1.0};
-                matrix.matrix[1] = {0.0, 1.0, 0.0, 4.0};
+                matrix.matrix[1] = {0.0, 1.0, 0.0, 2.0};
                 matrix.matrix[2] = {sen, 0.0, cos, -1.0};
                 matrix.matrix[3] = {0.0, 0.0, 0.0, 1.0};
                 //camera->transformCamera(matrix);

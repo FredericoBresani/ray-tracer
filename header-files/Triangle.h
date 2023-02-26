@@ -112,17 +112,29 @@ class Triangle: public Object
                     v1 = v1 + v2*(-1*(v1.z/v2.z));
                 }
                 double alpha = 0.0, beta = 0.0, gama = 0.0;
-                if (v2.z == 0.0 && (point[2] < -kEpsilon || point[2] > kEpsilon)) return false;
+                if (v2.z == 0.0 && (point[2] < -kEpsilon || point[2] > kEpsilon)) 
+                {
+                    (*tmin) = infinity;
+                    return false;
+                }
                 if (v2.z != 0.0)
                 {
                     gama = point[2]/v2.z; 
                 }
-                if (v1.y == 0.0 && (point[1] < -kEpsilon || point[1] > kEpsilon)) return false;
+                if (v1.y == 0.0 && (point[1] < -kEpsilon || point[1] > kEpsilon))
+                { 
+                    (*tmin) = infinity;
+                    return false;
+                }
                 if (v1.y != 0.0)
                 {
                     beta = point[1]/v1.y;
                 }
-                if (v0.x == 0.0 && (point[0] < -kEpsilon || point[0] > kEpsilon)) return false;
+                if (v0.x == 0.0 && (point[0] < -kEpsilon || point[0] > kEpsilon))
+                {
+                    (*tmin) = infinity;
+                    return false;
+                }
                 if (v0.x != 0.0)
                 {
                     alpha = point[0]/v0.x;
@@ -133,13 +145,23 @@ class Triangle: public Object
                 double ABGsum = alpha + beta + gama;
                 if (ABGsum <= 1.0 + kEpsilon && ABGsum >= 1.0 - kEpsilon)
                 {   
-                    if (alpha > 1.0 || beta > 1.0 || gama > 1.0) return (false);
-                    if (alpha < 0.0 || beta < 0.0 || gama < 0.0) return (false);
+                    if (alpha > 1.0 || beta > 1.0 || gama > 1.0) 
+                    {
+                        (*tmin) = infinity;
+                        return false;
+                    }
+                    if (alpha < 0.0 || beta < 0.0 || gama < 0.0)
+                    {
+                        (*tmin) = infinity;
+                        return false;
+                    }
                     return true;
                 } else {
+                    (*tmin) = infinity;
                     return false;
                 }
             } else {
+                (*tmin) = infinity;
                 return false;
             }
         }
