@@ -6,15 +6,16 @@
 #include "Points.h"
 #include "Definitions.h"
 #include "Ray.h"
+#include "RGBColor.h"
 
 class Line: public Object 
 {
     public:
         Point3D origin;
         Vec3D direction, normal;
-        Vec3D color;
+        RGBColor color;
         double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Line(const Point3D &o, const Vec3D &d, const Vec3D &RGB): origin(o), direction(d), color(RGB) {}
+        Line(const Point3D &o, const Vec3D &d, const RGBColor &RGB): origin(o), direction(d), color(RGB) {}
         ~Line() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& hit) const
         { 
@@ -28,7 +29,7 @@ class Line: public Object
             double cos = toLoc*(direction.normalize(direction));
             if (t > kEpsilon && t < (*tmin) && (cos >= -1.0 - 0.000002 && cos <= -1.0 + 0.000002 || cos >= 1.0 - 0.000002 && cos <= 1.0 + 0.000002))
             {
-                Vec3D color = this->getColor();
+                RGBColor color = this->getColor();
                 (*tmin) = t;
                 // hit.hit_location = Point3D(color.x, color.y, color.z);
                 // hit.normal = direction.normalize(direction);
@@ -42,7 +43,7 @@ class Line: public Object
             Point3D closerP = origin + (direction*closerT);
             this->normal = C - closerP;
         }
-        Vec3D getColor() const
+        RGBColor getColor() const
         {
             return this->color;
         }

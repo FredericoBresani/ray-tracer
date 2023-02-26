@@ -6,6 +6,7 @@
 #include "Vectors.h"
 #include "Definitions.h"
 #include "Plane.h"
+#include "RGBColor.h"
 
 class Triangle: public Object 
 {
@@ -13,9 +14,9 @@ class Triangle: public Object
         Point3D A;
         Point3D B;
         Point3D C;
-        Vec3D color;
+        RGBColor color;
         double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Triangle(const Point3D &a, const Point3D &b, const Point3D &c, const Vec3D &RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): A(a), B(b), C(c), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
+        Triangle(const Point3D &a, const Point3D &b, const Point3D &c, const RGBColor &RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): A(a), B(b), C(c), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Triangle() {}
         bool rayObjectIntersect(const Ray& ray, double *tmin, const HitInfo& info) const
         {
@@ -142,7 +143,7 @@ class Triangle: public Object
                 return false;
             }
         }
-        Vec3D getColor() const
+        RGBColor getColor() const
         {
             return this->color;
         }

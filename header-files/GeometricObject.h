@@ -4,17 +4,18 @@
 #include "Vectors.h"
 #include "Ray.h"
 #include "HitInfo.h"
+#include "RGBColor.h"
 
 
 class Object 
 {
     public:
-        Vec3D color;
+        RGBColor color;
         double radius, difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
         Object() {}
         virtual ~Object() {}
         virtual bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const = 0;
-        virtual Vec3D getColor() const = 0;
+        virtual RGBColor getColor() const = 0;
         virtual double getKd() const = 0;
         virtual double getKs() const = 0;
         virtual double getKa() const = 0;

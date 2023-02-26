@@ -1,13 +1,13 @@
 #ifndef __AMBIENT__
 #define __AMBIENT__
 
-#include "Vectors.h"
+#include "RGBColor.h"
 
 class Ambient 
 {
     public:
-        Vec3D color;
-        Ambient(const Vec3D &c): color(c) {}
+        RGBColor color;
+        Ambient(const RGBColor &c): color(c) {}
         ~Ambient() {}
 };
 

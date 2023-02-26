@@ -5,6 +5,7 @@
 #include "Points.h"
 #include "Vectors.h"
 #include "Definitions.h"
+#include "RGBColor.h"
 
 
 class Plane: public Object 
@@ -12,9 +13,9 @@ class Plane: public Object
     public:
         Vec3D normal;
         Point3D pp;
-        Vec3D color;
+        RGBColor color;
         double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Plane(const Vec3D &n, const Point3D &p, const Vec3D &RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): normal(n), pp(p), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
+        Plane(const Vec3D &n, const Point3D &p, const RGBColor &RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): normal(n), pp(p), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Plane() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const 
         {
@@ -29,7 +30,7 @@ class Plane: public Object
                 return false;
             }
         }
-        Vec3D getColor() const
+        RGBColor getColor() const
         {
             return this->color;
         }

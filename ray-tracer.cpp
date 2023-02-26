@@ -23,26 +23,24 @@
 
 // lets use doubles for object-ray intersection and floats for shading calculations
 
-Vec3D setPixelColorNormal(const Vec3D &normal)
+RGBColor setPixelColorNormal(const Vec3D &normal)
 {
-    return Vec3D(std::min(double(1), normal.x), std::min(double(1), normal.y), std::min(double(1), -normal.z))*210.0;
+    return RGBColor(std::min(double(1), normal.x), std::min(double(1), normal.y), std::min(double(1), -normal.z))*210.0;
 }
 
-Vec3D setPixelColorCoordinates(const Point3D &location)
+RGBColor setPixelColorCoordinates(const Point3D &location)
 {   
-    //x = red
-    //y = green
-    //z = blue
+    //x = red, y = green, z = blue
     double red = 0.0, green = 0.0, blue = 0.0;
-    Vec3D aux = Vec3D(location.x, location.y, location.z)/255.0;
+    RGBColor aux = Vec3D(location.x, location.y, location.z)/255.0;
     red += aux.x < 0.0 ? 0.0 : aux.x;
     green += aux.y < 0.0 ? 0.0 : aux.y;
     blue += aux.z < 0.0 ? 0.0 : aux.z;
-    aux = Vec3D(std::min(double(1), red*40.0), std::min(double(1), green*40.0), std::min(double(1), blue*40.0))*255.0;
+    aux = RGBColor(std::min(double(1), red*40.0), std::min(double(1), green*40.0), std::min(double(1), blue*40.0))*255.0;
     return aux;
 }
 
-Vec3D setBackgroundSmoothness(const Point3D &pixel, Camera *camera) 
+RGBColor setBackgroundSmoothness(const Point3D &pixel, Camera *camera) 
 {
     Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, camera->cameraPos);
     double maxScreen = 0, x = 0, y = 0;
@@ -53,10 +51,10 @@ Vec3D setBackgroundSmoothness(const Point3D &pixel, Camera *camera)
         maxScreen = double(camera->vr)/double(camera->hr);
         y = (maxScreen + std::abs(screenCoordinates.y))/(2.0*maxScreen);
     }
-    return Vec3D(135.0, 206.0, 235.0)*y;
+    return RGBColor(135.0, 206.0, 235.0)*y;
 }
 
-Vec3D setBackgroundRGBCoordinates(const Point3D &pixel, Camera *camera) 
+RGBColor setBackgroundRGBCoordinates(const Point3D &pixel, Camera *camera) 
 {
     Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, camera->cameraPos);
     double maxScreen = 0, x = 0, y = 0;
@@ -70,17 +68,17 @@ Vec3D setBackgroundRGBCoordinates(const Point3D &pixel, Camera *camera)
         y = (maxScreen + screenCoordinates.y)/(2.0*maxScreen);
     }
     
-    return Vec3D(255.0*x, 255.0*y, 60.0);
+    return RGBColor(255.0*x, 255.0*y, 60.0);
 }
 
-Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, Camera camera, std::vector<Light*> lights, Ambient *ambient, int depth)
+RGBColor trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, Camera camera, std::vector<Light*> lights, Ambient *ambient, int depth)
 {
     double t = infinity;
     double tmin = infinity;
     double kd, ks, ka, kr, kt, phongExp; 
     HitInfo *hInfo = new HitInfo();
     Ray *ray = new Ray(origin, pixel - origin);
-    Vec3D color;
+    RGBColor color;
     if (depth == 0) {
         return color;
     }
@@ -110,7 +108,7 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
     {
         // return setBackgroundSmoothness(pixel, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
-        return Vec3D(135.0, 206.0, 235.0);
+        return RGBColor(135.0, 206.0, 235.0);
     } else {
         double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0;
         Vec3D resultingColor, mixedColor;
@@ -122,7 +120,7 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
         Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
         Vec3D auxReflex = auxVec^hInfo->viewerReflex;
         Vec3D auxNormal = auxVec^hInfo->normal;
-        Vec3D colorFilter = ambient->color*ka;
+        RGBColor colorFilter = ambient->color*ka;
         Point3D difusePixel = hitPoint + hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
         Point3D reflexPixel = hitPoint + (hInfo->viewerReflex*10.0) + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
         for (int l = 0; l < lights.size(); l++) {
@@ -134,8 +132,8 @@ Vec3D trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& o
             resultingColor = resultingColor + mixedColor*kd*std::max(hInfo->normal*hInfo->toLight, 0.0);
         }
          
-        color = Vec3D(colorFilter.x*resultingColor.x, colorFilter.y*resultingColor.y, colorFilter.z*resultingColor.z)/255.0;
-        color = Vec3D(std::min(color.x , 255.0), std::min(color.y, 255.0), std::min(color.z, 255.0));
+        color = RGBColor(colorFilter.x*resultingColor.x, colorFilter.y*resultingColor.y, colorFilter.z*resultingColor.z)/255.0;
+        color = RGBColor(std::min(color.x , 255.0), std::min(color.y, 255.0), std::min(color.z, 255.0));
         if (kr > 0) {
             color = color + trace(hitPoint, reflexPixel, objetos, camera, lights, ambient, depth - 1);
             color = color/2.0;
@@ -212,7 +210,7 @@ int main()
         {
             case 's': 
             {
-                Sphere *e = new Sphere(Point3D(_1, _2, _3), Vec3D(_5, _6, _7), _4, _8, _9, _10, _11, _12, _13);
+                Sphere *e = new Sphere(Point3D(_1, _2, _3), RGBColor(_5, _6, _7), _4, _8, _9, _10, _11, _12, _13);
                 if (objetos.size() == 0) {
                     matrix.matrix[0] = {1.0, 0.0, 0.0, 1.0};
                     matrix.matrix[1] = {0.0, 1.0, 0.0, 1.0};
@@ -225,19 +223,19 @@ int main()
             }
             case 'p':
             {
-                Plane *p = new Plane(Vec3D(_4, _5, _6), Point3D(_1, _2, _3), Vec3D(_7, _8, _9), _10, _11, _12, _13, _14, _15);
+                Plane *p = new Plane(Vec3D(_4, _5, _6), Point3D(_1, _2, _3), RGBColor(_7, _8, _9), _10, _11, _12, _13, _14, _15);
                 objetos.push_back(p);
                 break;
             }
             case 't':
             {
-                Triangle *t = new Triangle(Point3D(_1, _2, _3), Point3D(_4, _5, _6), Point3D(_7, _8, _9), Vec3D(_10, _11, _12), _13, _14, _15, _16, _17, _18);
+                Triangle *t = new Triangle(Point3D(_1, _2, _3), Point3D(_4, _5, _6), Point3D(_7, _8, _9), RGBColor(_10, _11, _12), _13, _14, _15, _16, _17, _18);
                 objetos.push_back(t);
                 break;
             }
             case 'l':
             {
-                Light *l = new Light(Point3D(_1, _2, _3), Vec3D(_4, _5, _6));
+                Light *l = new Light(Point3D(_1, _2, _3), RGBColor(_4, _5, _6));
                 lights.push_back(l);
                 break;
             }
@@ -257,14 +255,14 @@ int main()
             }
             case 'r':
             {
-                Line *line = new Line(Point3D(_1, _2, _3), Vec3D(_4, _5, _6), Vec3D(_7, _8, _9));
+                Line *line = new Line(Point3D(_1, _2, _3), Vec3D(_4, _5, _6), RGBColor(_7, _8, _9));
                 line->setNormal(camera->cameraPos);
                 objetos.push_back(line);
                 break;
             }  
             case 'a':
             {
-                ambient = new Ambient(Vec3D(_1, _2, _3));
+                ambient = new Ambient(RGBColor(_1, _2, _3));
                 break;
             }
             default:

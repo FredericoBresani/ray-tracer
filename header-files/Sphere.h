@@ -6,6 +6,7 @@
 #include "Definitions.h"
 #include "GeometricObject.h"
 #include "HitInfo.h"
+#include "RGBColor.h"
 #include <math.h>
 
 
@@ -13,9 +14,9 @@ class Sphere: public Object
 {
     public:
         Point3D center;
-        Vec3D color;
+        RGBColor color;
         double radius, difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Sphere(const Point3D &c, const Vec3D &RGB, double r, double difuse, double specular, double ambient, double reflection, double transmission, double phong): center(c), color(RGB), radius(r), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
+        Sphere(const Point3D &c, const RGBColor &RGB, double r, double difuse, double specular, double ambient, double reflection, double transmission, double phong): center(c), color(RGB), radius(r), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
         ~Sphere() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const
         {
@@ -53,7 +54,7 @@ class Sphere: public Object
             }
             return false;
         }
-        Vec3D getColor() const
+        RGBColor getColor() const
         {
             return this->color;
         }
