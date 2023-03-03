@@ -20,6 +20,7 @@
 #include "./header-files/Ambient.h"
 #include "./header-files/Light.h"
 #include "./header-files/Camera.h"
+#include "./header-files/Material.h"
 
 // lets use doubles for object-ray intersection and floats for shading calculations
 
@@ -210,7 +211,10 @@ int main()
         {
             case 's': 
             {
-                Sphere *e = new Sphere(Point3D(_1, _2, _3), RGBColor(_5, _6, _7), _4, _8, _9, _10, _11, _12, _13);
+                Material *mater = new Material{
+                    RGBColor(_5, _6, _7), _8, _9, _10, _11, _12, _13
+                };
+                Sphere *e = new Sphere(Point3D(_1, _2, _3), _4, mater);
                 if (objetos.size() == 0) {
                     matrix.matrix[0] = {1.0, 0.0, 0.0, 1.0};
                     matrix.matrix[1] = {0.0, 1.0, 0.0, 1.0};
@@ -223,13 +227,19 @@ int main()
             }
             case 'p':
             {
-                Plane *p = new Plane(Vec3D(_4, _5, _6), Point3D(_1, _2, _3), RGBColor(_7, _8, _9), _10, _11, _12, _13, _14, _15);
+                Material *mater = new Material{
+                    RGBColor(_7, _8, _9), _10, _11, _12, _13, _14, _15
+                };
+                Plane *p = new Plane(Vec3D(_4, _5, _6), Point3D(_1, _2, _3), mater);
                 objetos.push_back(p);
                 break;
             }
             case 't':
             {
-                Triangle *t = new Triangle(Point3D(_1, _2, _3), Point3D(_4, _5, _6), Point3D(_7, _8, _9), RGBColor(_10, _11, _12), _13, _14, _15, _16, _17, _18);
+                Material *mater = new Material{
+                    RGBColor(_10, _11, _12), _13, _14, _15, _16, _17, _18
+                };
+                Triangle *t = new Triangle(Point3D(_1, _2, _3), Point3D(_4, _5, _6), Point3D(_7, _8, _9), mater);
                 objetos.push_back(t);
                 break;
             }

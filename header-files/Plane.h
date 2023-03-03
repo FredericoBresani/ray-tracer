@@ -6,6 +6,7 @@
 #include "Vectors.h"
 #include "Definitions.h"
 #include "RGBColor.h"
+#include "Material.h"
 
 
 class Plane: public Object 
@@ -13,9 +14,8 @@ class Plane: public Object
     public:
         Vec3D normal;
         Point3D pp;
-        RGBColor color;
-        double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Plane(const Vec3D &n, const Point3D &p, const RGBColor &RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): normal(n), pp(p), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
+        Material *material;
+        Plane(const Vec3D &n, const Point3D &p, Material *m): normal(n), pp(p), material(m) {}
         ~Plane() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const 
         {
@@ -32,31 +32,31 @@ class Plane: public Object
         }
         RGBColor getColor() const
         {
-            return this->color;
+            return this->material->color;
         }
         double getKd() const
         {
-            return this->difuseK;
+            return this->material->difuseK;
         }
         double getKs() const
         {
-            return this->specularK;
+            return this->material->specularK;
         }
         double getKa() const
         {
-            return this->ambientK;
+            return this->material->ambientalK;
         }
         double getKr() const
         {
-            return this->reflectionK;
+            return this->material->reflectiveK;
         }
         double getKt() const
         {
-            return this->transmissionK;
+            return this->material->transmissionK;
         }
         double getPhongExp() const
         {
-            return this->phongExp;
+            return this->material->roughK;
         }
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {

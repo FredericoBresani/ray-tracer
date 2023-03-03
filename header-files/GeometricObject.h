@@ -5,6 +5,7 @@
 #include "Ray.h"
 #include "HitInfo.h"
 #include "RGBColor.h"
+#include "Material.h"
 
 
 class Object 
@@ -12,6 +13,7 @@ class Object
     public:
         RGBColor color;
         double radius, difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
+        Material *material;
         Object() {}
         virtual ~Object() {}
         virtual bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const = 0;

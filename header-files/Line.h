@@ -7,6 +7,7 @@
 #include "Definitions.h"
 #include "Ray.h"
 #include "RGBColor.h"
+#include "Material.h"
 
 class Line: public Object 
 {
@@ -15,6 +16,7 @@ class Line: public Object
         Vec3D direction, normal;
         RGBColor color;
         double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
+        Material *material;
         Line(const Point3D &o, const Vec3D &d, const RGBColor &RGB): origin(o), direction(d), color(RGB) {}
         ~Line() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& hit) const

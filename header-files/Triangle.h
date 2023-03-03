@@ -7,6 +7,7 @@
 #include "Definitions.h"
 #include "Plane.h"
 #include "RGBColor.h"
+#include "Material.h"
 
 class Triangle: public Object 
 {
@@ -14,9 +15,8 @@ class Triangle: public Object
         Point3D A;
         Point3D B;
         Point3D C;
-        RGBColor color;
-        double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
-        Triangle(const Point3D &a, const Point3D &b, const Point3D &c, const RGBColor &RGB, double difuse, double specular, double ambient, double reflection, double transmission, double phong): A(a), B(b), C(c), color(RGB), difuseK(difuse), specularK(specular), ambientK(ambient), reflectionK(reflection), transmissionK(transmission), phongExp(phong) {}
+        Material *material;
+        Triangle(const Point3D &a, const Point3D &b, const Point3D &c, Material *m): A(a), B(b), C(c), material(m) {}
         ~Triangle() {}
         bool rayObjectIntersect(const Ray& ray, double *tmin, const HitInfo& info) const
         {
@@ -25,10 +25,14 @@ class Triangle: public Object
             {
                 tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
             }
-            Plane *tPlane = new Plane(tPlaneNormal, this->A, color, 0, 0, 0, 0, 0, 0);
+            Material *tempMaterial = new Material{
+                color, 0, 0, 0, 0, 0, 0
+            };
+            Plane *tPlane = new Plane(tPlaneNormal, this->A, tempMaterial);
             Point3D pHit;
             if (tPlane->rayObjectIntersect(ray, tmin, info)) 
             {   
+                free(tPlane);
                 pHit = ray.origin + ray.direction*(*tmin);      
                 Vec3D temp;                     // _      _  _     _
                 Vec3D v0 = Vec3D(A.x, B.x, C.x);//|a1 b1 c1||a|   |X|
@@ -167,31 +171,31 @@ class Triangle: public Object
         }
         RGBColor getColor() const
         {
-            return this->color;
+            return this->material->color;
         }
         double getKd() const
         {
-            return this->difuseK;
+            return this->material->difuseK;
         }
         double getKs() const
         {
-            return this->specularK;
+            return this->material->specularK;
         }
         double getKa() const
         {
-            return this->ambientK;
+            return this->material->ambientalK;
         }
         double getKr() const
         {
-            return this->reflectionK;
+            return this->material->reflectiveK;
         }
         double getKt() const
         {
-            return this->transmissionK;
+            return this->material->transmissionK;
         }
         double getPhongExp() const
         {
-            return this->phongExp;
+            return this->material->roughK;
         }
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {
