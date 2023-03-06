@@ -20,7 +20,6 @@ class Plane: public Object
         bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const 
         {
             double t = ((pp - ray.origin) * this->normal) / (ray.direction * this->normal);
-            Point3D location = ray.origin + ray.direction*t;
             if (t > kEpsilon && t < (*tmin))
             {
                 (*tmin) = t;

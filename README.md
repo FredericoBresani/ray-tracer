@@ -47,7 +47,7 @@ l l1 l2 l3 R G B
 
 - camera:
 ```bash
-c h_res v_res d up1 up2 up3 l1 l2 l3 m1 m2 m3
+c h_res v_res d up1 up2 up3 l1 l2 l3 m1 m2 m3 p s
 # c: identify a camera
 # h_res: horizontal resolution
 # v_res: vertical resolution
@@ -55,6 +55,8 @@ c h_res v_res d up1 up2 up3 l1 l2 l3 m1 m2 m3
 # (up1, up2, up3): the coordinates of the up vector
 # (l1, l2, l3): the coordinates of the camera location
 # (m1, m2, m3): the coordintes of the location the the camera points at
+# p: pixel size
+# s: samples
 ```
 
 - ambient:

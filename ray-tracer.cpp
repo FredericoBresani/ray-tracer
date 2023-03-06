@@ -109,7 +109,8 @@ RGBColor trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>
     {
         // return setBackgroundSmoothness(pixel, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
-        return RGBColor(135.0, 206.0, 235.0);
+        // return RGBColor(0.0, 0.0, 0.0);
+        return RGBColor(190.0, 230.0, 255.0);
     } else {
         double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0;
         Vec3D resultingColor, mixedColor;
@@ -151,7 +152,6 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
     Vec3D toPixel = camera.w*camera.distance + camera.right*(-camera.pixelQtnH/2.0) + camera.iup*(camera.pixelQtnV/2.0);/* - (camera.iup/2.0) + (camera.right/2.0)*/ //while using anti-aliasing there is no need to be in the center of the pixel
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
-    int antiSamples = 3;
     int depth = 2;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
@@ -164,25 +164,19 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
         } else {
             screenP = screenP + camera.right;
         }
+
         //anti-aliasing
+        int samplesByRow = sqrt(camera.sampler_ptr->get_num_samples());
         Vec3D sum;
-        Vec3D sampleRight = camera.right/(double)antiSamples;
-        Vec3D sampleUp = camera.iup/(double)antiSamples;
-        Point3D sampledPixel = screenP + sampleRight/2.0 - sampleUp/2.0;
-        for(int iSamples = 0; iSamples < antiSamples; iSamples++)
-        {
-            for(int jSamples = 0; jSamples < antiSamples; jSamples++)
-            {
-                sum = sum + trace(camera.cameraPos, sampledPixel, objetos, camera, lights, &ambient, depth);
-                if (jSamples == antiSamples - 1) {
-                    sampledPixel = sampledPixel - sampleRight*(antiSamples - 1) - sampleUp;
-                } else {
-                    sampledPixel = sampledPixel + sampleRight;
-                }
-                
-            }
+        for(int iSamples = 0; iSamples < camera.sampler_ptr->get_num_samples(); iSamples++)
+        {  
+            Point2D aliasUnit = camera.sampler_ptr->sample_unit_square();
+            Vec3D sampleX = camera.right*aliasUnit.x;
+            Vec3D sampleY = camera.iup*(-1)*(aliasUnit.y);
+            sum = sum + trace(camera.cameraPos, screenP + sampleX + sampleY, objetos, camera, lights, &ambient, depth);    
         }
-        pixels.push_back(sum/(double)(antiSamples*antiSamples));
+
+        pixels.push_back(sum/(double)(camera.sampler_ptr->get_num_samples()));
     }
     std::ofstream pixelOutput("./image.ppm", std::ios::out | std::ios::binary);
     pixelOutput << "P6\n" << camera.pixelQtnH << " " << camera.pixelQtnV << "\n255\n";
@@ -251,7 +245,7 @@ int main()
             }
             case 'c':
             {
-                camera = new Camera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12));
+                camera = new Camera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14);
                 //1rad = 180/pi graus
                 double cos = std::cos(M_PI/6.0); 
                 double sen = std::sin(M_PI/6.0);
@@ -260,7 +254,7 @@ int main()
                 matrix.matrix[2] = {sen, 0.0, cos, -1.0};
                 matrix.matrix[3] = {0.0, 0.0, 0.0, 1.0};
                 //camera->transformCamera(matrix);
-                camera->makeCamera(1.0);
+                camera->makeCamera();
                 break;
             }
             case 'r':

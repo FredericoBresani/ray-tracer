@@ -11,6 +11,8 @@ template <typename T> class Point2
         Point2(): x(T(0)), y(T(0)) {}
         Point2(T _x): x(_x), y(_x) {}
         Point2(T _x, T _y): x(_x), y(_y) {} 
+        Point2<T> operator + (const Vec2<T> &v) const { return Point2<T>(x + v.x, y + v.y); }
+        Point2<T> operator / (const T& t) const { return Point2<T>(x/t, y/t); }
 };
 
 template <typename T> class Point3
