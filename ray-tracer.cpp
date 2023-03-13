@@ -136,13 +136,13 @@ RGBColor trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>
          
         color = RGBColor(colorFilter.x*resultingColor.x, colorFilter.y*resultingColor.y, colorFilter.z*resultingColor.z)/255.0;
         color = RGBColor(std::min(color.x , 255.0), std::min(color.y, 255.0), std::min(color.z, 255.0));
-        if (kr > 0) {
+        /*if (kr > 0) {
             color = color + trace(hitPoint, reflexPixel, objetos, camera, lights, ambient, depth - 1);
             color = color/2.0;
         } else {
             color = color + trace(hitPoint, difusePixel, objetos, camera, lights, ambient, depth - 1);
             color = color/2.0;
-        }
+        }*/
     }
     return color;
 }

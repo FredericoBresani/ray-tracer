@@ -66,7 +66,7 @@ class Camera
 
         void set_sampler()
         {
-            sampler_ptr = new RegularSampler(samples);
+            sampler_ptr = new JitteredSampler(samples);
         }
 };
 

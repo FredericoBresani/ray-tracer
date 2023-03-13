@@ -13,6 +13,7 @@ class RegularSampler: public Sampler
             n_samples = n*n;
             n_sets = 1;
             this->generate_samples();
+            this->setup_shuffled_indices();
         }
         ~RegularSampler() {}
         private:

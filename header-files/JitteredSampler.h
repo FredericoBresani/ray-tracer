@@ -13,6 +13,8 @@ class JitteredSampler: public Sampler
             n_samples = n*n;
             n_sets = 83;
             this->generate_samples();
+            this->setup_shuffled_indices();
+            this->map_samples_to_unit_disk();
         }
         ~JitteredSampler();
     private:
