@@ -7,7 +7,8 @@ class Ambient
 {
     public:
         RGBColor color;
-        Ambient(const RGBColor &c): color(c) {}
+        float ir;
+        Ambient(const RGBColor &c, const float &r): color(c), ir(r) {}
         ~Ambient() {}
 };
 

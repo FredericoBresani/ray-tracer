@@ -60,7 +60,8 @@ c h_res v_res d up1 up2 up3 l1 l2 l3 m1 m2 m3 p s
 ```
 
 - ambient:
-a R G B
+a R G B ir
 ```bash
 # (R, G, B): The ambient light color
+# ir: The ambient reflectiveness coeficient
 ```

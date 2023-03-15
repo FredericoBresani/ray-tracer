@@ -110,39 +110,46 @@ RGBColor trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>
         // return setBackgroundSmoothness(pixel, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
         // return RGBColor(0.0, 0.0, 0.0);
-        return RGBColor(190.0, 230.0, 255.0);
+        return RGBColor(255.0, 255.0, 255.0);
+        // return RGBColor(190.0, 230.0, 255.0);
     } else {
-        double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0;
+        double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0, reflectiveness = 0;
         Vec3D resultingColor, mixedColor;
+        RGBColor colorFilter = ambient->color*ka;
         hInfo->toCamera = camera.cameraPos - hInfo->hit_location;
         hInfo->toCamera = hInfo->toCamera.normalize(hInfo->toCamera);
         hInfo->viewerReflex = ((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera;
         hInfo->viewerReflex = hInfo->viewerReflex.normalize(hInfo->viewerReflex);
         Point3D hitPoint = hInfo->hit_location + hInfo->normal*0.001;
+
         Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
+
         Vec3D auxReflex = auxVec^hInfo->viewerReflex;
+        Point3D reflexPoint = hitPoint + (hInfo->viewerReflex*10.0) + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
+
+
         Vec3D auxNormal = auxVec^hInfo->normal;
-        RGBColor colorFilter = ambient->color*ka;
-        Point3D difusePixel = hitPoint + hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
-        Point3D reflexPixel = hitPoint + (hInfo->viewerReflex*10.0) + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
+        Point3D difusePoint = hitPoint + hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
+        
+        reflectiveness = 1.0 + ambient->ir;
         for (int l = 0; l < lights.size(); l++) {
             hInfo->toLight = lights[l]->lightPos - hInfo->hit_location;
             hInfo->toLight = hInfo->toLight.normalize(hInfo->toLight);
             hInfo->reflection = ((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight;
             hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
-            mixedColor = Vec3D(lights[l]->lightColor.x*color.x, lights[l]->lightColor.y*color.y, lights[l]->lightColor.z*color.z)/255.0;
+            mixedColor = Vec3D(lights[l]->lightColor.x*(color.x*reflectiveness), lights[l]->lightColor.y*(color.y*reflectiveness), lights[l]->lightColor.z*(color.z*reflectiveness))/255.0;
             resultingColor = resultingColor + mixedColor*kd*std::max(hInfo->normal*hInfo->toLight, 0.0);
         }
          
         color = RGBColor(colorFilter.x*resultingColor.x, colorFilter.y*resultingColor.y, colorFilter.z*resultingColor.z)/255.0;
         color = RGBColor(std::min(color.x , 255.0), std::min(color.y, 255.0), std::min(color.z, 255.0));
-        /*if (kr > 0) {
-            color = color + trace(hitPoint, reflexPixel, objetos, camera, lights, ambient, depth - 1);
+        if (kr > 0) {
+            color = color + trace(hitPoint, reflexPoint, objetos, camera, lights, ambient, depth - 1);
             color = color/2.0;
         } else {
-            color = color + trace(hitPoint, difusePixel, objetos, camera, lights, ambient, depth - 1);
+            color = color + trace(hitPoint, difusePoint, objetos, camera, lights, ambient, depth - 1);
             color = color/2.0;
-        }*/
+        }
     }
     return color;
 }
@@ -266,7 +273,7 @@ int main()
             }  
             case 'a':
             {
-                ambient = new Ambient(RGBColor(_1, _2, _3));
+                ambient = new Ambient(RGBColor(_1, _2, _3), _4);
                 break;
             }
             default:
