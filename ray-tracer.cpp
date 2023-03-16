@@ -15,6 +15,7 @@
 #include "./header-files/GeometricObject.h"
 #include "./header-files/Sphere.h"
 #include "./header-files/Triangle.h"
+#include "./header-files/TriangleMesh.h"
 #include "./header-files/Plane.h"
 #include "./header-files/Line.h"
 #include "./header-files/Ambient.h"
@@ -237,10 +238,27 @@ int main()
             case 't':
             {
                 Material *mater = new Material{
-                    RGBColor(_10, _11, _12), _13, _14, _15, _16, _17, _18
+                    RGBColor(_3, _4, _5), _6, _7, _8, _9, _10, _11
                 };
-                Triangle *t = new Triangle(Point3D(_1, _2, _3), Point3D(_4, _5, _6), Point3D(_7, _8, _9), mater);
-                objetos.push_back(t);
+                TriangleMesh *mesh = new TriangleMesh((int)_1, (int)_2, mater);
+
+                float v1, v2, v3;
+                int i1, i2, i3;
+                while(_2 > 0)
+                {
+                    scanf("%f %f %f\n", &v1, &v2, &v3);
+                    mesh->vertices.push_back(Point3D(v1, v2, v3));
+                    _2--;
+                }
+
+                while(_1 > 0)
+                {
+                    scanf("%i %i %i\n", &i1, &i2, &i3);
+                    mesh->triangles.push_back(Point3I(i1, i2, i3));
+                    _1--;
+                }
+                
+                objetos.push_back(mesh);
                 break;
             }
             case 'l':

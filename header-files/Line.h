@@ -19,7 +19,7 @@ class Line: public Object
         Material *material;
         Line(const Point3D &o, const Vec3D &d, const RGBColor &RGB): origin(o), direction(d), color(RGB) {}
         ~Line() {}
-        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& hit) const
+        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& hit)
         { 
             double t = ((ray.origin - origin)*normal)/((normal*ray.direction)*(-1.0));
             Point3D location = ray.origin + (ray.direction*t);

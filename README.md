@@ -17,13 +17,24 @@ p x y z v1 v2 v3 R G B kd ks ka kr kt p
 # (v1, v2, v3): the coordinates of the plane normal
 ```
 
-- triangles:
+- Triangle mesh:
 ```bash
-t a1 a2 a3 b1 b2 b3 c1 c2 c3 R G B kd ks ka kr kt p
+t nt nv R G B kd ks ka kr kt p
+p1x p1y p1z
+p2x p2y p2z
+.
+.
+.
+pnvx pnvy pnvz
+t1a t1b t1c
+t2a t2b t2c
+.
+.
+.
+tnta tntb tntc
 # t: identify a triangle
-# (a1, a2, a3): the coordinates of the first vertex of the triangle
-# (b1, b2, b3): the coordinates of the second vertex of the triangle
-# (c1, c2, c3): the coordinates of the third vertex of the triangle
+# (p1x, p1y, p1z) to (pnvx, pnvy, pnvz): the coordinates of the the vertices
+# (t1a, t1b, t1c) to (tnta, tntb, tntc): triples of vertices indices
 ```
 
 - all previous objects:

@@ -12,11 +12,10 @@ class Object
 {
     public:
         RGBColor color;
-        double radius, difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
         Material *material;
         Object() {}
         virtual ~Object() {}
-        virtual bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const = 0;
+        virtual bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) = 0;
         virtual RGBColor getColor() const = 0;
         virtual double getKd() const = 0;
         virtual double getKs() const = 0;

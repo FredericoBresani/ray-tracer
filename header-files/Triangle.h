@@ -18,7 +18,7 @@ class Triangle: public Object
         Material *material;
         Triangle(const Point3D &a, const Point3D &b, const Point3D &c, Material *m): A(a), B(b), C(c), material(m) {}
         ~Triangle() {}
-        bool rayObjectIntersect(const Ray& ray, double *tmin, const HitInfo& info) const
+        bool rayObjectIntersect(const Ray& ray, double *tmin, const HitInfo& info)
         {
             Vec3D tPlaneNormal = (this->A - this->B) ^ (this->A - this->C);
             if (((ray.direction * (-1)) * tPlaneNormal) <= 0)

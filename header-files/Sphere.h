@@ -19,7 +19,7 @@ class Sphere: public Object
         Material *material;
         Sphere(const Point3D &c, double r, Material *m): center(c), radius(r), material(m) {}
         ~Sphere() {}
-        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info) const
+        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info)
         {
             double a = pow(ray.direction.norma(ray.direction), 2.0);
             double b = ((ray.origin - this->center) * ray.direction) * 2.0;

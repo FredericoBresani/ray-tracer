@@ -44,5 +44,6 @@ template <typename T> class Point3
 
 typedef Point3<double> Point3D;
 typedef Point2<double> Point2D;
+typedef Point3<int> Point3I;
 
 #endif
