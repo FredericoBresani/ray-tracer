@@ -8,7 +8,8 @@ class Ambient
     public:
         RGBColor color;
         float ir;
-        Ambient(const RGBColor &c, const float &r): color(c), ir(r) {}
+        int depth = 1;
+        Ambient(const RGBColor &c, const float &r, const int &d): color(c), ir(r), depth(d) {}
         ~Ambient() {}
 };
 

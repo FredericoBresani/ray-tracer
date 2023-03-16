@@ -159,7 +159,6 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
     Vec3D toPixel = camera.w*camera.distance + camera.right*(-camera.pixelQtnH/2.0) + camera.iup*(camera.pixelQtnV/2.0);/* - (camera.iup/2.0) + (camera.right/2.0)*/ //while using anti-aliasing there is no need to be in the center of the pixel
     Point3D screenP = camera.cameraPos + toPixel;
     Vec3D down;
-    int depth = 2;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < camera.pixelQtnH*camera.pixelQtnV; i++)
     {
@@ -180,7 +179,7 @@ void render(std::vector<Object*>& objetos, std::vector<Light*>& lights, Camera& 
             Point2D aliasUnit = camera.sampler_ptr->sample_unit_square();
             Vec3D sampleX = camera.right*aliasUnit.x;
             Vec3D sampleY = camera.iup*(-1)*(aliasUnit.y);
-            sum = sum + trace(camera.cameraPos, screenP + sampleX + sampleY, objetos, camera, lights, &ambient, depth);    
+            sum = sum + trace(camera.cameraPos, screenP + sampleX + sampleY, objetos, camera, lights, &ambient, ambient.depth);    
         }
 
         pixels.push_back(sum/(double)(camera.sampler_ptr->get_num_samples()));
@@ -273,7 +272,7 @@ int main()
             }  
             case 'a':
             {
-                ambient = new Ambient(RGBColor(_1, _2, _3), _4);
+                ambient = new Ambient(RGBColor(_1, _2, _3), _4, _5);
                 break;
             }
             default:
