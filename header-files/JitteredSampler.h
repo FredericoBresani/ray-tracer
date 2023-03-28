@@ -1,5 +1,5 @@
 #ifndef __JITTERED__
-#define __JITTEREF__
+#define __JITTERED__
 
 #include "Sampler.h"
 #include "Points.h"
