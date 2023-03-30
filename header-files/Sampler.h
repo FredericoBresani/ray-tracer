@@ -36,6 +36,15 @@ Point2D Sampler::sample_unit_square(void)
     return (samples[jump + shuffled_indices[(jump + count++) % n_samples]]);
 }
 
+Point2D Sampler::sample_unit_disk(void)
+{
+    if (count % n_samples == 0)
+    {
+        jump = ((int)rand() % n_sets) * n_samples;
+    }
+    return (disk_samples[jump + shuffled_indices[(jump + count++) % n_samples]]);
+}
+
 int Sampler::get_num_samples()
 {
     return n_samples;
