@@ -14,6 +14,7 @@ class RegularSampler: public Sampler
             n_sets = 1;
             this->generate_samples();
             this->setup_shuffled_indices();
+            this->map_samples_to_unit_disk();
         }
         ~RegularSampler() {}
         private:

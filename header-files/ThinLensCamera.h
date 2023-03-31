@@ -54,7 +54,6 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
             screenP = screenP + right;
         }
         //anti-aliasing
-        int samplesByRow = sqrt(sampler_ptr->get_num_samples());
         Vec3D sum;
         for(int iSamples = 0; iSamples < sampler_ptr->get_num_samples(); iSamples++)
         {  
@@ -63,12 +62,17 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
             Vec3D sampleY = iup*(-1)*(aliasUnit.y);
             Point3D aliasP = screenP + sampleX + sampleY;
 
+            Point2D screenCoordinate = this->worldToScreenCoordinates(aliasP, cameraPos);
+
+            double px = screenCoordinate.x * (focalPlaneDistance/distance);
+            double py = screenCoordinate.y * (focalPlaneDistance/distance);
+
             Point2D diskUnit = sampler_ptr->sample_unit_disk();
+
             Point3D lensSample = cameraPos + u*((diskUnit.x*2.0) - 1) + v*((diskUnit.y*2.0) - 1);
 
-            double px = aliasP.x * (focalPlaneDistance/distance);
-            double py = aliasP.y * (focalPlaneDistance/distance);
             Vec3D focalDir = (w*focalPlaneDistance) + (v*py) + (u*px);
+            // focalDir = focalDir.normalize(focalDir);
             Point3D onFocalPlane = cameraPos + focalDir;
             sum = sum + trace(lensSample, onFocalPlane, objetos, (*this), lights, &ambient, ambient.depth);    
         }
@@ -90,7 +94,5 @@ void ThinLensCamera::set_sampler()
 {
     sampler_ptr = new JitteredSampler(samples);
 }
-
-
 
 #endif
