@@ -19,7 +19,7 @@ class Camera
         virtual void render(std::vector<Object*> objetos, std::vector<Light*>& lights, Ambient& ambient) = 0;
     protected:
         Sampler *sampler_ptr;
-        double distance, pixelSize, pixelQtnH, pixelQtnV, focalPlaneDistance;
+        double distance, pixelSize, pixelQtnH, pixelQtnV, focalPlaneDistance, fishAngle;
         int hr, vr, samples;
         Vec3D up, u, v, w, right, iup;
         Point3D cameraPos, lookAt;

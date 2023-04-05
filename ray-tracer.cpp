@@ -24,6 +24,7 @@
 #include "./header-files/Material.h"
 #include "./header-files/PinholeCamera.h"
 #include "./header-files/ThinLensCamera.h"
+#include "./header-files/FishEyeCamera.h"
 
 // lets use doubles for object-ray intersection and floats for shading calculations
 
@@ -154,7 +155,10 @@ int main()
             case 'c':
             {
                 // camera = new PinholeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14);
-                camera = new ThinLensCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
+                // camera = new ThinLensCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
+                camera = new FishEyeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
+
+
                 //1rad = 180/pi graus
                 double cos = std::cos(M_PI/6.0); 
                 double sen = std::sin(M_PI/6.0);

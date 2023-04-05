@@ -31,18 +31,17 @@ class PinholeCamera: public Camera {
 void PinholeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& lights, Ambient& ambient)
 {
     Vec3D toPixel = w*distance + right*(-pixelQtnH/2.0) + iup*(pixelQtnV/2.0);/* - (camera.iup/2.0) + (camera.right/2.0)*/ //while using anti-aliasing there is no need to be in the center of the pixel
-    Point3D screenP = cameraPos + toPixel;
     Vec3D down;
+    Vec3D dir;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < pixelQtnH*pixelQtnV; i++)
     {
         if ((i) % (int)pixelQtnH == 0)
         {
             down = down - iup;
-            screenP = cameraPos + toPixel;
-            screenP = screenP + down;
+            dir = toPixel + down;
         } else {
-            screenP = screenP + right;
+            dir = dir + right;
         }
         //anti-aliasing
         int samplesByRow = sqrt(sampler_ptr->get_num_samples());
@@ -52,7 +51,8 @@ void PinholeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& li
             Point2D aliasUnit = sampler_ptr->sample_unit_square();
             Vec3D sampleX = right*aliasUnit.x;
             Vec3D sampleY = iup*(-1)*(aliasUnit.y);
-            sum = sum + trace(cameraPos, screenP + sampleX + sampleY, objetos, (*this), lights, &ambient, ambient.depth);    
+            Vec3D aliasDir = dir + sampleX + sampleY;
+            sum = sum + trace(Ray(cameraPos, aliasDir), objetos, (*this), lights, &ambient, ambient.depth);    
         }
         pixels.push_back(sum/(double)(sampler_ptr->get_num_samples()));
     }

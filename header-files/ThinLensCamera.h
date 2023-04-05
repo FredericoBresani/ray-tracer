@@ -40,7 +40,7 @@ class ThinLensCamera: public Camera {
 void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& lights, Ambient& ambient)
 {
     Vec3D toPixel = w*distance + right*(-pixelQtnH/2.0) + iup*(pixelQtnV/2.0);/* - (camera.iup/2.0) + (camera.right/2.0)*/ //while using anti-aliasing there is no need to be in the center of the pixel
-    Point3D screenP = cameraPos + toPixel;
+    Vec3D dir;
     Vec3D down;
     std::vector<Vec3D> pixels;
     for (int i = 0; i < pixelQtnH*pixelQtnV; i++)
@@ -48,10 +48,9 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
         if ((i) % (int)pixelQtnH == 0)
         {
             down = down - iup;
-            screenP = cameraPos + toPixel;
-            screenP = screenP + down;
+            dir = toPixel + down;
         } else {
-            screenP = screenP + right;
+            dir = dir + right;
         }
         //anti-aliasing
         Vec3D sum;
@@ -60,8 +59,8 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
             Point2D aliasUnit = sampler_ptr->sample_unit_square();
             Vec3D sampleX = right*aliasUnit.x;
             Vec3D sampleY = iup*(-1)*(aliasUnit.y);
-            Point3D aliasP = screenP + sampleX + sampleY;
-
+            Vec3D aliasDir = dir + sampleX + sampleY;
+            Point3D aliasP = cameraPos + aliasDir;
             Point2D screenCoordinate = this->worldToScreenCoordinates(aliasP, cameraPos);
 
             double px = screenCoordinate.x * (focalPlaneDistance/distance);
@@ -72,9 +71,10 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
             Point3D lensSample = cameraPos + u*((diskUnit.x*2.0) - 1) + v*((diskUnit.y*2.0) - 1);
 
             Vec3D focalDir = (w*focalPlaneDistance) + (v*py) + (u*px);
-            // focalDir = focalDir.normalize(focalDir);
             Point3D onFocalPlane = cameraPos + focalDir;
-            sum = sum + trace(lensSample, onFocalPlane, objetos, (*this), lights, &ambient, ambient.depth);    
+            Vec3D dirZ = onFocalPlane - lensSample;
+            dirZ = dirZ.normalize(dirZ);
+            sum = sum + trace(Ray(lensSample, dirZ), objetos, (*this), lights, &ambient, ambient.depth);    
         }
         pixels.push_back(sum/(double)(sampler_ptr->get_num_samples()));
     }

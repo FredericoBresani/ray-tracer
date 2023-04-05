@@ -15,26 +15,25 @@
 #include "Light.h"
 
 
-RGBColor trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>& objetos, Camera &camera, std::vector<Light*> lights, Ambient *ambient, int depth)
+RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, std::vector<Light*> lights, Ambient *ambient, int depth)
 {
     double t = infinity;
     double tmin = infinity;
     double kd, ks, ka, kr, kt, phongExp; 
     HitInfo *hInfo = new HitInfo();
-    Ray *ray = new Ray(origin, pixel - origin);
     RGBColor color;
     if (depth == 0) {
         return color;
     }
     for (int i = 0; i < objetos.size(); i++)
     {
-        if (objetos[i]->rayObjectIntersect(*ray, &t, *hInfo))
+        if (objetos[i]->rayObjectIntersect(ray, &t, *hInfo))
         {
             if (t < tmin)
             {
                 tmin = t;
-                hInfo->hit_location = ray->origin + ray->direction*tmin;
-                hInfo->normal = objetos[i]->getNormal(hInfo->hit_location, *ray);
+                hInfo->hit_location = ray.origin + ray.direction*tmin;
+                hInfo->normal = objetos[i]->getNormal(hInfo->hit_location, ray);
                 color = objetos[i]->getColor();
                 kd = objetos[i]->getKd();
                 ks = objetos[i]->getKs();
@@ -68,11 +67,11 @@ RGBColor trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>
         Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
 
         Vec3D auxReflex = auxVec^hInfo->viewerReflex;
-        Point3D reflexPoint = hitPoint + (hInfo->viewerReflex*10.0) + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
+        Vec3D reflexDirection = (hInfo->viewerReflex*10.0) + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
 
 
         Vec3D auxNormal = auxVec^hInfo->normal;
-        Point3D difusePoint = hitPoint + hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
+        Vec3D difuseDirection = hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
         
         reflectiveness = 1.0 + ambient->ir;
         for (int l = 0; l < lights.size(); l++) {
@@ -87,10 +86,10 @@ RGBColor trace(const Point3D& origin, const Point3D& pixel, std::vector<Object*>
         color = RGBColor(colorFilter.x*resultingColor.x, colorFilter.y*resultingColor.y, colorFilter.z*resultingColor.z)/255.0;
         color = RGBColor(std::min(color.x , 255.0), std::min(color.y, 255.0), std::min(color.z, 255.0));
         if (kr > 0) {
-            color = color + trace(hitPoint, reflexPoint, objetos, camera, lights, ambient, depth - 1);
+            color = color + trace(Ray(hitPoint, reflexDirection), objetos, camera, lights, ambient, depth - 1);
             color = color/2.0;
         } else {
-            color = color + trace(hitPoint, difusePoint, objetos, camera, lights, ambient, depth - 1);
+            color = color + trace(Ray(hitPoint, difuseDirection), objetos, camera, lights, ambient, depth - 1);
             color = color/2.0;
         }
     }
