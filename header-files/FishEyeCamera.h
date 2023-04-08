@@ -38,35 +38,25 @@ class FishEyeCamera : public Camera {
 void FishEyeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& lights, Ambient& ambient)
 {
     Vec3D toPixel = w*distance + right*(-pixelQtnH/2.0) + iup*(pixelQtnV/2.0);
-    Vec3D dir, down;
-    float uAngle = fishAngle;
+    Vec3D down;
+    Vec3D dir = toPixel;
     float wAngle = fishAngle/2.0;
-    float auxWAngle = fishAngle/pixelQtnV;
+    float uAngle = fishAngle/2.0;
     std::vector<RGBColor> pixels;
     for (int i = 0; i < pixelQtnH*pixelQtnV; i++) 
     {
-        if ((i) % (int)pixelQtnH == 0)
+        if ((i) % (int)pixelQtnH == 0 && i != 0)
         {
             down = down - iup;
             dir = toPixel + down;
-            if (wAngle < 0)
-            {
-                wAngle = 2*M_PI - auxWAngle;
-                auxWAngle += fishAngle/pixelQtnV;
-            } else {
-                wAngle -= fishAngle/pixelQtnV;
-            }
-            uAngle = fishAngle;
         } else {
             dir = dir + right;
-            uAngle -= uAngle/pixelQtnH;
         }
         Point3D screenP = cameraPos + dir;
         Point2D screenCoordinates = this->worldToScreenCoordinates(screenP, cameraPos);
         Vec2D diskVec = Vec2D(screenCoordinates.x, screenCoordinates.y);
-        Vec3D direction = u*std::cos(uAngle) + v*std::sin(wAngle) + w*std::cos(wAngle) + w*std::sin(uAngle);
-
         Vec3D sum;
+        
         if (diskVec.norma(diskVec) <= 1) {
             for (int iSamples = 0; iSamples < sampler_ptr->get_num_samples(); iSamples++)
             {
@@ -75,9 +65,14 @@ void FishEyeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& li
                 Vec3D sampleY = iup*(-1)*(aliasUnit.y);
                 Vec3D aliasDir = dir + sampleX + sampleY;
                 Point3D aliasPoint = cameraPos + aliasDir;
-
-
-                sum = sum + trace(Ray(aliasPoint, direction), objetos, (*this), lights, &ambient, ambient.depth);
+                Point2D aliasScreenCoordinates = this->worldToScreenCoordinates(aliasPoint, cameraPos);
+                Vec2D aliasVec = Vec2D(aliasScreenCoordinates.x, aliasScreenCoordinates.y);
+                float aliasDistance = aliasVec.norma(aliasVec);
+                float auxWAngle = wAngle*aliasDistance;
+                float cosW = std::cos(auxWAngle); 
+                float senW = std::sin(auxWAngle);
+                Vec3D direction = u*(aliasScreenCoordinates.x*senW) + v*(senW*aliasScreenCoordinates.y) + w*cosW;
+                sum = sum + trace(Ray(cameraPos, direction), objetos, (*this), lights, &ambient, ambient.depth);
             }
         } else {
             sum = Vec3D(0.0, 0.0, 0.0);

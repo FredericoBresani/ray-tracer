@@ -14,7 +14,7 @@
 class TriangleMesh: public Object {
     public:
         Material *material;
-        int nTriangles, nVertices, triangleIndice;
+        int nTriangles, nVertices, triangleIndice = 0;
         std::vector<Point3D> vertices;
         std::vector<Point3I> triangles;
         std::vector<Vec3D> triangleNormals;
@@ -41,8 +41,8 @@ class TriangleMesh: public Object {
                 };
                 Plane *tPlane = new Plane(tPlaneNormal, A, tempMaterial);
                 Point3D pHit;
-                if (tPlane->rayObjectIntersect(ray, tmin, info)) 
-                {   
+                if (tPlane->rayObjectIntersect(ray, tmin, info)) // to-do: the intersecion fails when 3 respective coordinates on
+                {   // diferent points, equals to 0
                     free(tPlane);
                     pHit = ray.origin + ray.direction*(*tmin);      
                     Vec3D temp;                     // _      _  _     _
@@ -51,7 +51,7 @@ class TriangleMesh: public Object {
                     Vec3D v2 = Vec3D(A.z, B.z, C.z);//|a3 b3 c3||g|   |Z|
                     double point[] = { pHit.x, pHit.y, pHit.z };
                     double tempP;
-                    if (v1.x != 0.0 && v0.x == 0.0)
+                    if (v1.x != 0.0 && v0.x == 0.0) // try to escalonate, reordering the vectors and values to avoid 0's
                     {
                         temp = v0;
                         v0 = v1;
@@ -69,13 +69,7 @@ class TriangleMesh: public Object {
                         point[0] = point[2];
                         point[2] = tempP;
                     }
-                    if (v0.x != 0.0)
-                    {
-                        point[1] = point[1] + (point[0]*(-1*(v1.x/v0.x)));
-                        point[2] = point[2] + (point[0]*(-1*(v2.x/v0.x)));
-                        v1 = v1 + v0*(-1*(v1.x/v0.x));
-                        v2 = v2 + v0*(-1*(v2.x/v0.x));
-                    }
+
                     if (v2.y != 0.0 && v1.y == 0.0)
                     {
                         temp = v1;
@@ -85,14 +79,13 @@ class TriangleMesh: public Object {
                         point[1] = point[2];
                         point[2] = tempP;
                     }
-                    else if (v0.y != 0.0 && v1.y == 0.0 && v0.x == 0.0)
+
+                    if (v0.x != 0.0)
                     {
-                        temp = v1;
-                        v1 = v0;
-                        v0 = temp;
-                        tempP = point[1];
-                        point[1] = point[0];
-                        point[0] = tempP;
+                        point[1] = point[1] + (point[0]*(-1*(v1.x/v0.x)));
+                        point[2] = point[2] + (point[0]*(-1*(v2.x/v0.x)));
+                        v1 = v1 + v0*(-1*(v1.x/v0.x));
+                        v2 = v2 + v0*(-1*(v2.x/v0.x));
                     }
                     if (v1.y != 0.0)
                     {
@@ -169,7 +162,6 @@ class TriangleMesh: public Object {
                         if ((*tmin) < min)
                         {
                             min = (*tmin);
-                            
                         }
                     } else {
                         (*tmin) = infinity;
