@@ -57,25 +57,25 @@ void FishEyeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& li
         Vec2D diskVec = Vec2D(screenCoordinates.x, screenCoordinates.y);
         Vec3D sum;
         
-        if (diskVec.norma(diskVec) <= 1) {
-            for (int iSamples = 0; iSamples < sampler_ptr->get_num_samples(); iSamples++)
-            {
-                Point2D aliasUnit = sampler_ptr->sample_unit_square();
-                Vec3D sampleX = right*aliasUnit.x;
-                Vec3D sampleY = iup*(-1)*(aliasUnit.y);
-                Vec3D aliasDir = dir + sampleX + sampleY;
-                Point3D aliasPoint = cameraPos + aliasDir;
-                Point2D aliasScreenCoordinates = this->worldToScreenCoordinates(aliasPoint, cameraPos);
-                Vec2D aliasVec = Vec2D(aliasScreenCoordinates.x, aliasScreenCoordinates.y);
+        for (int iSamples = 0; iSamples < sampler_ptr->get_num_samples(); iSamples++)
+        {
+            Point2D aliasUnit = sampler_ptr->sample_unit_square();
+            Vec3D sampleX = right*aliasUnit.x;
+            Vec3D sampleY = iup*(-1)*(aliasUnit.y);
+            Vec3D aliasDir = dir + sampleX + sampleY;
+            Point3D aliasPoint = cameraPos + aliasDir;
+            Point2D aliasScreenCoordinates = this->worldToScreenCoordinates(aliasPoint, cameraPos);
+            Vec2D aliasVec = Vec2D(aliasScreenCoordinates.x, aliasScreenCoordinates.y);
+            if (aliasVec.norma(aliasVec) <= 1) {
                 float aliasDistance = aliasVec.norma(aliasVec);
                 float auxWAngle = wAngle*aliasDistance;
                 float cosW = std::cos(auxWAngle); 
                 float senW = std::sin(auxWAngle);
                 Vec3D direction = u*(aliasScreenCoordinates.x*senW) + v*(senW*aliasScreenCoordinates.y) + w*cosW;
                 sum = sum + trace(Ray(cameraPos, direction), objetos, (*this), lights, &ambient, ambient.depth);
+            } else {
+
             }
-        } else {
-            sum = Vec3D(0.0, 0.0, 0.0);
         }
         pixels.push_back(sum/(double)(sampler_ptr->get_num_samples()));
     }
