@@ -3,17 +3,18 @@
 
 #include "Vectors.h"
 #include "RGBColor.h"
+#include "HitInfo.h"
+#include "Points.h"
 
 class Light
 {
     public:
-        //shadows
-        Point3D lightPos;
-        RGBColor lightColor;
-
-
-        virtual Vec3D getDirection() = 0;
-        virtual RGBColor incidentRadiance() = 0;
+        virtual Vec3D getDirection(HitInfo &hit) = 0;
+        virtual RGBColor incidentRadiance(HitInfo &hit) = 0;
+        virtual Point3D getPos() = 0;
+        virtual RGBColor getColor() = 0;
+    protected:
+        bool shadows;
 };
 
 #endif
