@@ -7,10 +7,13 @@
 class Light
 {
     public:
+        //shadows
         Point3D lightPos;
         RGBColor lightColor;
-        Light(const Point3D& pos, const RGBColor& color): lightPos(pos), lightColor(color) {}
-        ~Light() {}
+
+
+        virtual Vec3D getDirection() = 0;
+        virtual RGBColor incidentRadiance() = 0;
 };
 
 #endif

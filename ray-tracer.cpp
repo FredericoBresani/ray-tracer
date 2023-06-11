@@ -25,6 +25,7 @@
 #include "./header-files/PinholeCamera.h"
 #include "./header-files/ThinLensCamera.h"
 #include "./header-files/FishEyeCamera.h"
+#include "./header-files/PointLight.h"
 
 // lets use doubles for object-ray intersection and floats for shading calculations
 
@@ -148,15 +149,15 @@ int main()
             }
             case 'l':
             {
-                Light *l = new Light(Point3D(_1, _2, _3), RGBColor(_4, _5, _6));
+                PointLight *l = new PointLight(Point3D(_1, _2, _3), RGBColor(_4, _5, _6));
                 lights.push_back(l);
                 break;
             }
             case 'c':
             {
-                // camera = new PinholeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14);
+                camera = new PinholeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14);
                 // camera = new ThinLensCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
-                camera = new FishEyeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
+                // camera = new FishEyeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
 
 
                 //1rad = 180/pi graus

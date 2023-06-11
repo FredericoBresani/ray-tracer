@@ -76,11 +76,13 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         reflectiveness = 1.0 + ambient->ir;
         for (int l = 0; l < lights.size(); l++) {
             hInfo->toLight = lights[l]->lightPos - hInfo->hit_location;
+            float lightDistance = hInfo->toLight.norma(hInfo->toLight); // implement the attenuation of light by the distance
             hInfo->toLight = hInfo->toLight.normalize(hInfo->toLight);
             hInfo->reflection = ((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight;
             hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
             mixedColor = Vec3D(lights[l]->lightColor.x*(color.x*reflectiveness), lights[l]->lightColor.y*(color.y*reflectiveness), lights[l]->lightColor.z*(color.z*reflectiveness))/255.0;
             resultingColor = resultingColor + mixedColor*kd*std::max(hInfo->normal*hInfo->toLight, 0.0);
+            // the resulting color is the sum of the object color mixed with the light color + the difuse shading 
         }
          
         color = RGBColor(colorFilter.x*resultingColor.x, colorFilter.y*resultingColor.y, colorFilter.z*resultingColor.z)/255.0;
