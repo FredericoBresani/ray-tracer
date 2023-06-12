@@ -42,7 +42,7 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
     Vec3D toPixel = w*distance + right*(-pixelQtnH/2.0) + iup*(pixelQtnV/2.0);/* - (camera.iup/2.0) + (camera.right/2.0)*/ //while using anti-aliasing there is no need to be in the center of the pixel
     Vec3D dir;
     Vec3D down;
-    std::vector<Vec3D> pixels;
+    std::vector<RGBColor> pixels;
     for (int i = 0; i < pixelQtnH*pixelQtnV; i++)
     {
         if ((i) % (int)pixelQtnH == 0)
@@ -53,7 +53,7 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
             dir = dir + right;
         }
         //anti-aliasing
-        Vec3D sum;
+        RGBColor sum;
         for(int iSamples = 0; iSamples < sampler_ptr->get_num_samples(); iSamples++)
         {  
             Point2D aliasUnit = sampler_ptr->sample_unit_square();
@@ -82,9 +82,9 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
     pixelOutput << "P6\n" << pixelQtnH << " " << pixelQtnV << "\n255\n";
     for (int i = 0; i < pixelQtnH*pixelQtnV; i++)
     {
-        pixelOutput <<(unsigned char)(std::max(double(1), pixels[i].x)) <<
-            (unsigned char)(std::max(double(1), pixels[i].y)) <<
-            (unsigned char)(std::max(double(1), pixels[i].z));
+        pixelOutput <<(unsigned char)(std::max(double(1), pixels[i].r)) <<
+            (unsigned char)(std::max(double(1), pixels[i].g)) <<
+            (unsigned char)(std::max(double(1), pixels[i].b));
     }
     pixelOutput.close();
 }

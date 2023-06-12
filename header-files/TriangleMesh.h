@@ -21,7 +21,7 @@ class TriangleMesh: public Object {
         std::vector<Vec3D> verticesNormals;
         TriangleMesh(int n, int v, Material *m): nTriangles(n), nVertices(n), material(m) {}
         ~TriangleMesh() {}
-        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo &info) 
+        bool rayObjectIntersect(const Ray &ray, double *tmin, HitInfo &info) 
         {
             double min = infinity;
             bool hit = false;
@@ -154,14 +154,16 @@ class TriangleMesh: public Object {
                         {
                             (*tmin) = infinity;
                         }
-                        if (alpha < 0.0 || beta < 0.0 || gama < 0.0)
+                        else if (alpha < 0.0 || beta < 0.0 || gama < 0.0)
                         {
                             (*tmin) = infinity;
-                        }
-                        hit = true;
-                        if ((*tmin) < min)
-                        {
-                            min = (*tmin);
+                        } else {
+                            hit = true;
+                            if ((*tmin) < min)
+                            {
+                                info.hit_object = true;
+                                min = (*tmin);
+                            }
                         }
                     } else {
                         (*tmin) = infinity;

@@ -38,10 +38,10 @@ RGBColor setPixelColorCoordinates(const Point3D &location)
 {   
     //x = red, y = green, z = blue
     double red = 0.0, green = 0.0, blue = 0.0;
-    RGBColor aux = Vec3D(location.x, location.y, location.z)/255.0;
-    red += aux.x < 0.0 ? 0.0 : aux.x;
-    green += aux.y < 0.0 ? 0.0 : aux.y;
-    blue += aux.z < 0.0 ? 0.0 : aux.z;
+    RGBColor aux = RGBColor(location.x, location.y, location.z)/255.0;
+    red += aux.r < 0.0 ? 0.0 : aux.r;
+    green += aux.g < 0.0 ? 0.0 : aux.g;
+    blue += aux.b < 0.0 ? 0.0 : aux.b;
     aux = RGBColor(std::min(double(1), red*40.0), std::min(double(1), green*40.0), std::min(double(1), blue*40.0))*255.0;
     return aux;
 }

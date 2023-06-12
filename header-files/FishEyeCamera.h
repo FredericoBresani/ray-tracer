@@ -55,7 +55,7 @@ void FishEyeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& li
         Point3D screenP = cameraPos + dir;
         Point2D screenCoordinates = this->worldToScreenCoordinates(screenP, cameraPos);
         Vec2D diskVec = Vec2D(screenCoordinates.x, screenCoordinates.y);
-        Vec3D sum;
+        RGBColor sum;
         
         for (int iSamples = 0; iSamples < sampler_ptr->get_num_samples(); iSamples++)
         {
@@ -83,9 +83,9 @@ void FishEyeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& li
     pixelOutput << "P6\n" << pixelQtnH << " " << pixelQtnV << "\n255\n";
     for (int i = 0; i < pixelQtnH*pixelQtnV; i++)
     {
-        pixelOutput <<(unsigned char)(std::max(double(1), pixels[i].x)) <<
-            (unsigned char)(std::max(double(1), pixels[i].y)) <<
-            (unsigned char)(std::max(double(1), pixels[i].z));
+        pixelOutput <<(unsigned char)(std::max(double(1), pixels[i].r)) <<
+            (unsigned char)(std::max(double(1), pixels[i].g)) <<
+            (unsigned char)(std::max(double(1), pixels[i].b));
     }
     pixelOutput.close();
 

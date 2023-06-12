@@ -19,7 +19,7 @@ class Sphere: public Object
         Material *material;
         Sphere(const Point3D &c, double r, Material *m): center(c), radius(r), material(m) {}
         ~Sphere() {}
-        bool rayObjectIntersect(const Ray &ray, double *tmin, const HitInfo& info)
+        bool rayObjectIntersect(const Ray &ray, double *tmin, HitInfo& info)
         {
             double a = pow(ray.direction.norma(ray.direction), 2.0);
             double b = ((ray.origin - this->center) * ray.direction) * 2.0;
@@ -31,6 +31,7 @@ class Sphere: public Object
                 if (t > kEpsilon && t < (*tmin))
                 {
                     (*tmin) = t;
+                    info.hit_object = true;
                     return true;
                 } else {
                     return false;
@@ -44,11 +45,13 @@ class Sphere: public Object
                 if ((t1 < t2) && (t1 > kEpsilon) && (t1 < (*tmin)))
                 {
                     (*tmin) = t1;
+                    info.hit_object = true;
                     return true;
                 }
                 else if (t2 > kEpsilon && t2 < (*tmin))
                 {
                     (*tmin) = t2;
+                    info.hit_object = true;
                     return true;
                 }
                 return false;

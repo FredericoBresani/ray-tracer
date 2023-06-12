@@ -2,6 +2,7 @@
 #define __MATERIAL__
 
 #include "RGBColor.h"
+#include "HitInfo.h"
 
 typedef struct ObjectMaterial {
     RGBColor color;
