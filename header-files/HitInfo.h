@@ -3,7 +3,8 @@
 
 #include "Vectors.h"
 #include "Points.h"
-#include "Material.h"
+
+class Material;
 
 class HitInfo {
     public:

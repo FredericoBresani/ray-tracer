@@ -11,7 +11,6 @@
 #include "./header-files/Points.h"
 #include "./header-files/RGBColor.h"
 #include "./header-files/Ray.h"
-#include "./header-files/HitInfo.h"
 #include "./header-files/GeometricObject.h"
 #include "./header-files/Sphere.h"
 #include "./header-files/Triangle.h"
@@ -21,11 +20,13 @@
 #include "./header-files/Ambient.h"
 #include "./header-files/Light.h"
 #include "./header-files/Camera.h"
-#include "./header-files/Material.h"
 #include "./header-files/PinholeCamera.h"
 #include "./header-files/ThinLensCamera.h"
 #include "./header-files/FishEyeCamera.h"
 #include "./header-files/PointLight.h"
+#include "./header-files/HitInfo.h"
+#include "./header-files/Material.h"
+
 
 // lets use doubles for object-ray intersection and floats for shading calculations
 

@@ -162,6 +162,7 @@ class TriangleMesh: public Object {
                             if ((*tmin) < min)
                             {
                                 info.hit_object = true;
+                                this->triangleIndice = i;
                                 min = (*tmin);
                             }
                         }

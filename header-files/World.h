@@ -21,7 +21,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
     double tmin = infinity;
     double kd, ks, ka, kr, kt, phongExp; 
     HitInfo *hInfo = new HitInfo();
-    RGBColor color, objectColor;
+    RGBColor color, objectColor, flatColor, difuseColor, specularColor, reflectiveColor, transparentColor;
     if (depth == 0) {
         return color;
     }
@@ -51,7 +51,6 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         //shade hit location
         double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0, reflectiveness = 0;
         RGBColor resultingColor, mixedColor;
-        RGBColor colorFilter = ambient->color*ka;
         hInfo->toCamera = camera.getPos() - hInfo->hit_location;
         hInfo->toCamera = hInfo->toCamera.normalize(hInfo->toCamera);
         hInfo->viewerReflex = ((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera;
@@ -74,19 +73,20 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
             hInfo->reflection = ((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight;
             hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
             mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
-            resultingColor = resultingColor + mixedColor*kd*std::max(hInfo->normal*hInfo->toLight, 0.0);
-            // the resulting color is the sum of the object color mixed with the light color + the difuse shading 
+            resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0);
         }
-         
-        color = (colorFilter^resultingColor)/255.0;
-        color = RGBColor(std::min(color.r , 255.0), std::min(color.g, 255.0), std::min(color.b, 255.0));
+
+        // flatColor = (ambient->color*ka + resultingColor)/2.0;
+        flatColor = RGBColor(std::min(resultingColor.r , 255.0), std::min(resultingColor.g, 255.0), std::min(resultingColor.b, 255.0));
+        color = flatColor;
+
+        if (kd > 0) {
+            color = (color + trace(Ray(hitPoint, difuseDirection), objetos, camera, lights, ambient, depth - 1))*(kd/2.0);
+        }
         if (kr > 0) {
-            color = color + trace(Ray(hitPoint, reflexDirection), objetos, camera, lights, ambient, depth - 1);
-            color = color/2.0;
-        } else {
-            color = color + trace(Ray(hitPoint, difuseDirection), objetos, camera, lights, ambient, depth - 1);
-            color = color/2.0;
+            color = (color + trace(Ray(hitPoint, reflexDirection), objetos, camera, lights, ambient, depth - 1))*(kr/2.0);
         }
+
         return color;
     } else {
         //return background color
