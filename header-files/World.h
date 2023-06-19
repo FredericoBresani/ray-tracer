@@ -15,6 +15,21 @@
 #include "Light.h"
 
 
+bool inShadow(Ray &ray, std::vector<Object*> &objetos, float lightDistance)
+{
+    double t = infinity;
+    HitInfo *shadowHit = new HitInfo();
+    for (int i = 0; i < objetos.size(); i++)
+    {
+        if (objetos[i]->rayObjectIntersect(ray, &t, *shadowHit)) {
+            if (t < 1) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, std::vector<Light*> lights, Ambient *ambient, int depth)
 {
     double t = infinity;
@@ -50,7 +65,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
     if (hInfo->hit_object) {
         //shade hit location
         double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0, reflectiveness = 0;
-        RGBColor resultingColor, mixedColor;
+        RGBColor resultingColor, mixedColor, specularColor;
         hInfo->toCamera = camera.getPos() - hInfo->hit_location;
         hInfo->toCamera = hInfo->toCamera.normalize(hInfo->toCamera);
         hInfo->viewerReflex = ((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera;
@@ -72,16 +87,24 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
             float lightDistance = hInfo->toLight.norma(hInfo->toLight); // implement the attenuation of light by the distance
             hInfo->reflection = ((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight;
             hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
+            if (inShadow(Ray(hInfo->hit_location, hInfo->toLight), objetos))
             mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
-            resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0);
+            specularColor = lights[l]->getColor()*(ks*pow(std::abs(hInfo->reflection*hInfo->toCamera), phongExp));
+            resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0) + specularColor;
         }
 
+        // float maxComponent = std::max(resultingColor.r, std::max(resultingColor.g, resultingColor.b));
         // flatColor = (ambient->color*ka + resultingColor)/2.0;
-        flatColor = RGBColor(std::min(resultingColor.r , 255.0), std::min(resultingColor.g, 255.0), std::min(resultingColor.b, 255.0));
+        /* if (maxComponent > 255.0) {
+            flatColor = (resultingColor/maxComponent)*255.0;
+        } else {
+            flatColor = resultingColor;
+        }*/
+        flatColor = RGBColor(std::min(resultingColor.r, 255.0), std::min(resultingColor.g, 255.0), std::min(resultingColor.b, 255.0));
         color = flatColor;
 
         if (kd > 0) {
-            color = (color + trace(Ray(hitPoint, difuseDirection), objetos, camera, lights, ambient, depth - 1))*(kd/2.0);
+            // color = (color + trace(Ray(hitPoint, difuseDirection), objetos, camera, lights, ambient, depth - 1))*(kd/2.0);
         }
         if (kr > 0) {
             color = (color + trace(Ray(hitPoint, reflexDirection), objetos, camera, lights, ambient, depth - 1))*(kr/2.0);
