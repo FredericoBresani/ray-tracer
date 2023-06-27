@@ -66,8 +66,8 @@ void FishEyeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& li
             Point3D aliasPoint = cameraPos + aliasDir;
             Point2D aliasScreenCoordinates = this->worldToScreenCoordinates(aliasPoint, cameraPos);
             Vec2D aliasVec = Vec2D(aliasScreenCoordinates.x, aliasScreenCoordinates.y);
-            if (aliasVec.norma(aliasVec) <= 1) {
-                float aliasDistance = aliasVec.norma(aliasVec);
+            if (Vec2D::norma(aliasVec) <= 1) {
+                float aliasDistance = Vec2D::norma(aliasVec);
                 float auxWAngle = wAngle*aliasDistance;
                 float cosW = std::cos(auxWAngle); 
                 float senW = std::sin(auxWAngle);

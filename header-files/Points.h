@@ -41,7 +41,7 @@ template <typename T> class Point3
         T distance(const Point3<T>& p) const
         {
             Vec3<T> v = Vec3<T>(x - p.x, y - p.y, z - p.z);
-            return v.norma(v);
+            return Vec3D::norma(v);
         }
 };
 

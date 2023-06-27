@@ -21,7 +21,7 @@ class Sphere: public Object
         ~Sphere() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, HitInfo& info)
         {
-            double a = pow(ray.direction.norma(ray.direction), 2.0);
+            double a = pow(Vec3D::norma(ray.direction), 2.0);
             double b = ((ray.origin - this->center) * ray.direction) * 2.0;
             double c = ((this->center ^ this->center) + (ray.origin ^ ray.origin)) + (-2.0)*(ray.origin ^ this->center) - (this->radius*this->radius);
             double delta = (b*b) - 4.0*a*c; 
@@ -88,8 +88,7 @@ class Sphere: public Object
         }
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {
-            Vec3D normal = hit - this->center; 
-            return normal.normalize(normal);
+            return Vec3D::normalize(hit - this->center);
         }
 };
 

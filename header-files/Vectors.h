@@ -15,11 +15,11 @@ template <typename T> class Vec2
         Vec2<T> operator * (const T& t) const { return Vec2<T>(x*t, y*t); }
         Vec2<T> operator / (const T& t) const { return Vec2<T>(x/t, y/t); }
         T operator * (const Vec2<T>& v) const { return (x*v.x) + (y*v.y); }
-        T norma(const Vec2<T>& v) const
+        static T norma(const Vec2<T>& v)
         {
             return pow((v.x*v.x) + (v.y*v.y), 0.5);
         }
-        Vec2<T> normalize(const Vec2<T>& v) const
+        static Vec2<T> normalize(const Vec2<T>& v)
         {
             const T norma = v->norma();
             return Vec2<T>(v / norma);
@@ -40,11 +40,11 @@ template <typename T> class Vec3
         Vec3<T> operator / (const T& t) const { return Vec3<T>(x/t, y/t, z/t); }
         T operator * (const Vec3<T>& v) const { return (x*v.x) + (y*v.y) + (z*v.z); }
         Vec3<T> operator ^ (const Vec3<T>& v) const { return Vec3<T>(y*v.z - (z*v.y), z*v.x - (x*v.z), x*v.y - (y*v.x)); }
-        T norma(const Vec3<T>& v) const
+        static T norma(const Vec3<T>& v)
         {
             return pow((v.x*v.x) + (v.y*v.y) + (v.z*v.z), 0.5);
         }
-        Vec3<T> normalize(const Vec3<T>& v) const
+        static Vec3<T> normalize(const Vec3<T>& v)
         {
             const T norma = v.norma(v);
             return Vec3<T>(v / norma);
@@ -64,5 +64,6 @@ template <typename T> class Vec3
 
 typedef Vec3<double> Vec3D;
 typedef Vec2<double> Vec2D;
+
 
 #endif

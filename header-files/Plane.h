@@ -62,7 +62,7 @@ class Plane: public Object
         }
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {
-            return normal.normalize(normal);
+            return Vec3D::normalize(normal);
         }
 };
 

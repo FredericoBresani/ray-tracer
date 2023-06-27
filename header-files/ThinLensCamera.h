@@ -72,8 +72,7 @@ void ThinLensCamera::render(std::vector<Object*> objetos, std::vector<Light*>& l
 
             Vec3D focalDir = (w*focalPlaneDistance) + (v*py) + (u*px);
             Point3D onFocalPlane = cameraPos + focalDir;
-            Vec3D dirZ = onFocalPlane - lensSample;
-            dirZ = dirZ.normalize(dirZ);
+            Vec3D dirZ = Vec3D::normalize(onFocalPlane - lensSample);
             sum = sum + trace(Ray(lensSample, dirZ), objetos, (*this), lights, &ambient, ambient.depth);    
         }
         pixels.push_back(sum/(double)(sampler_ptr->get_num_samples()));

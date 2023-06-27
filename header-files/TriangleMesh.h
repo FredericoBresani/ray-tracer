@@ -219,7 +219,7 @@ class TriangleMesh: public Object {
             {
                 tPlaneNormal = (A - C) ^ (A - B);
             }
-            return tPlaneNormal.normalize(tPlaneNormal);
+            return Vec3D::normalize(tPlaneNormal);
         }
 };
 

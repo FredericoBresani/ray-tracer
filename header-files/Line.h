@@ -26,15 +26,14 @@ class Line: public Object
             if (location.x > 7 || location.x < -7) return false;
             if (location.y > 7 || location.y < -7) return false;
             if (location.z > 7 || location.z < -7) return false;
-            Vec3D toLoc = location - origin;
-            toLoc = toLoc.normalize(toLoc);
-            double cos = toLoc*(direction.normalize(direction));
+            Vec3D toLoc = Vec3D::normalize(location - origin);
+            double cos = toLoc*(Vec3D::normalize(direction));
             if (t > kEpsilon && t < (*tmin) && (cos >= -1.0 - 0.000002 && cos <= -1.0 + 0.000002 || cos >= 1.0 - 0.000002 && cos <= 1.0 + 0.000002))
             {
                 RGBColor color = this->getColor();
                 (*tmin) = t;
                 // hit.hit_location = Point3D(color.x, color.y, color.z);
-                // hit.normal = direction.normalize(direction);
+                // hit.normal = Vec3D::normalize(direction);
                 return true;
             }
             return false;

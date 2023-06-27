@@ -15,14 +15,14 @@
 #include "Light.h"
 
 
-bool inShadow(Ray &ray, std::vector<Object*> &objetos, float lightDistance)
+bool inShadow(Ray ray, std::vector<Object*> &objetos, float lightDistance)
 {
     double t = infinity;
     HitInfo *shadowHit = new HitInfo();
     for (int i = 0; i < objetos.size(); i++)
     {
         if (objetos[i]->rayObjectIntersect(ray, &t, *shadowHit)) {
-            if (t < 1) {
+            if (t < lightDistance) {
                 return true;
             }
         }
@@ -66,10 +66,8 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         //shade hit location
         double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0, reflectiveness = 0;
         RGBColor resultingColor, mixedColor, specularColor;
-        hInfo->toCamera = camera.getPos() - hInfo->hit_location;
-        hInfo->toCamera = hInfo->toCamera.normalize(hInfo->toCamera);
-        hInfo->viewerReflex = ((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera;
-        hInfo->viewerReflex = hInfo->viewerReflex.normalize(hInfo->viewerReflex);
+        hInfo->toCamera = Vec3D::normalize(camera.getPos() - hInfo->hit_location);
+        hInfo->viewerReflex = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera);
         Point3D hitPoint = hInfo->hit_location + hInfo->normal*0.001;
 
         Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
@@ -84,23 +82,26 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         reflectiveness = 1.0 + ambient->ir;
         for (int l = 0; l < lights.size(); l++) {
             hInfo->toLight = lights[l]->getDirection((*hInfo));
-            float lightDistance = hInfo->toLight.norma(hInfo->toLight); // implement the attenuation of light by the distance
-            hInfo->reflection = ((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight;
-            hInfo->reflection = hInfo->reflection.normalize(hInfo->reflection);
-            if (inShadow(Ray(hInfo->hit_location, hInfo->toLight), objetos))
-            mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
-            specularColor = lights[l]->getColor()*(ks*pow(std::abs(hInfo->reflection*hInfo->toCamera), phongExp));
-            resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0) + specularColor;
+            // implement the attenuation of light by the distance
+            double lightDistance = Vec3D::norma(lights[l]->getPos() - hInfo->hit_location); 
+            hInfo->reflection = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight);
+            // add some flag to deactiviate shadows
+            if (!inShadow(Ray(hInfo->hit_location, hInfo->toLight), objetos, lightDistance))
+            {
+                mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
+                specularColor = lights[l]->getColor()*(ks*pow(std::max(hInfo->reflection*hInfo->toCamera, 0.0), phongExp));
+                resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0) + specularColor;
+            } 
         }
 
         // float maxComponent = std::max(resultingColor.r, std::max(resultingColor.g, resultingColor.b));
-        // flatColor = (ambient->color*ka + resultingColor)/2.0;
+        flatColor = ambient->color*ka + resultingColor;
         /* if (maxComponent > 255.0) {
             flatColor = (resultingColor/maxComponent)*255.0;
         } else {
             flatColor = resultingColor;
         }*/
-        flatColor = RGBColor(std::min(resultingColor.r, 255.0), std::min(resultingColor.g, 255.0), std::min(resultingColor.b, 255.0));
+        flatColor = RGBColor(std::min(flatColor.r, 255.0), std::min(flatColor.g, 255.0), std::min(flatColor.b, 255.0));
         color = flatColor;
 
         if (kd > 0) {

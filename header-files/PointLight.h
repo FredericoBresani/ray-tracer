@@ -24,8 +24,7 @@ class PointLight: public Light {
 
 Vec3D PointLight::getDirection(HitInfo &hit)
 {
-    Vec3D toLight = this->lightPos - hit.hit_location;
-    return toLight.normalize(toLight);
+    return Vec3D::normalize(this->lightPos - hit.hit_location);
 }
 
 RGBColor PointLight::incidentRadiance(HitInfo &hit)

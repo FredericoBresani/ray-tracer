@@ -205,7 +205,7 @@ class Triangle: public Object
             {
                 tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
             }
-            return tPlaneNormal.normalize(tPlaneNormal);
+            return Vec3D::normalize(tPlaneNormal);
         }
 };
 

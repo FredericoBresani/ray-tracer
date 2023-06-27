@@ -36,16 +36,14 @@ void Camera::makeCamera()
     // Tha camera base should follow this order {w = z, v = y, u = x}
     pixelQtnH = (double)hr/pixelSize;
     pixelQtnV = (double)vr/pixelSize;
-    Vec3D toScreen = Vec3D();
-    toScreen = toScreen.normalize(lookAt - cameraPos);  
+    Vec3D toScreen = Vec3D::normalize(lookAt - cameraPos);
     w = toScreen;
     Vec3D WUP = w ^ up;
     if (WUP.x == 0.0 && WUP.y == 0.0 && WUP.x == 0.0)
     {
         up = Vec3D(1.0, 0.0, 0.0);
     }
-    v = up - (w*((up*w)/(w*w)));
-    v = v.normalize(v);
+    v = Vec3D::normalize(up - (w*((up*w)/(w*w))));
     u = v ^ w;
     if (pixelQtnH <= pixelQtnV) {
         right =  u*(2.0/pixelQtnH);
