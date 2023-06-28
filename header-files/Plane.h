@@ -15,7 +15,8 @@ class Plane: public Object
         Vec3D normal;
         Point3D pp;
         Material *material;
-        Plane(const Vec3D &n, const Point3D &p, Material *m): normal(n), pp(p), material(m) {}
+        bool castShadows;
+        Plane(const Vec3D &n, const Point3D &p, Material *m, bool s): normal(n), pp(p), material(m), castShadows(s) {}
         ~Plane() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, HitInfo& info)
         {
@@ -63,6 +64,14 @@ class Plane: public Object
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {
             return Vec3D::normalize(normal);
+        }
+        bool getShadows() const
+        {
+            return this->material->getShadows;
+        }
+        bool getCastShadows() const 
+        {
+            return this->castShadows;
         }
 };
 

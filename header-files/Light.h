@@ -13,6 +13,7 @@ class Light
         virtual RGBColor incidentRadiance(HitInfo &hit) = 0;
         virtual Point3D getPos() = 0;
         virtual RGBColor getColor() = 0;
+        virtual bool castShadows() = 0;
     protected:
         bool shadows;
 };

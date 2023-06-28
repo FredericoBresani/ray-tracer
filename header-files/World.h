@@ -21,11 +21,13 @@ bool inShadow(Ray ray, std::vector<Object*> &objetos, float lightDistance)
     HitInfo *shadowHit = new HitInfo();
     for (int i = 0; i < objetos.size(); i++)
     {
-        if (objetos[i]->rayObjectIntersect(ray, &t, *shadowHit)) {
-            if (t < lightDistance) {
-                return true;
+    
+            if (objetos[i]->getCastShadows() && objetos[i]->rayObjectIntersect(ray, &t, *shadowHit)) {
+                if (t < lightDistance) {
+                    return true;
+                }
             }
-        }
+        
     }
     return false;
 }
@@ -34,7 +36,8 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
 {
     double t = infinity;
     double tmin = infinity;
-    double kd, ks, ka, kr, kt, phongExp; 
+    double kd, ks, ka, kr, kt, phongExp;
+    bool getShadows; 
     HitInfo *hInfo = new HitInfo();
     RGBColor color, objectColor, flatColor, difuseColor, specularColor, reflectiveColor, transparentColor;
     if (depth == 0) {
@@ -57,6 +60,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
                 kt = objetos[i]->getKt();
                 phongExp = objetos[i]->getPhongExp();
                 hInfo->material_pointer = objetos[i]->material;
+                getShadows = objetos[i]->getShadows();
                 // color = setPixelColorNormal(hit.normal);
                 // color = setPixelColorCoordinates(hit.hit_location);
             }
@@ -86,12 +90,19 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
             double lightDistance = Vec3D::norma(lights[l]->getPos() - hInfo->hit_location); 
             hInfo->reflection = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight);
             // add some flag to deactiviate shadows
-            if (!inShadow(Ray(hInfo->hit_location, hInfo->toLight), objetos, lightDistance))
+            if(lights[l]->castShadows() && getShadows)
             {
+                if (!inShadow(Ray(hInfo->hit_location, hInfo->toLight), objetos, lightDistance)) 
+                {
+                    mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
+                    specularColor = lights[l]->getColor()*(ks*pow(std::max(hInfo->reflection*hInfo->toCamera, 0.0), phongExp));
+                    resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0) + specularColor;
+                }
+            } else {
                 mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
                 specularColor = lights[l]->getColor()*(ks*pow(std::max(hInfo->reflection*hInfo->toCamera, 0.0), phongExp));
                 resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0) + specularColor;
-            } 
+            }
         }
 
         // float maxComponent = std::max(resultingColor.r, std::max(resultingColor.g, resultingColor.b));

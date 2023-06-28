@@ -16,6 +16,7 @@ class Triangle: public Object
         Point3D B;
         Point3D C;
         Material *material;
+        bool castShadows;
         Triangle(const Point3D &a, const Point3D &b, const Point3D &c, Material *m): A(a), B(b), C(c), material(m) {}
         ~Triangle() {}
         bool rayObjectIntersect(const Ray& ray, double *tmin, HitInfo& info)
@@ -26,9 +27,9 @@ class Triangle: public Object
                 tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
             }
             Material *tempMaterial = new Material{
-                color, 0, 0, 0, 0, 0, 0
+                color, 0, 0, 0, 0, 0, 0, false
             };
-            Plane *tPlane = new Plane(tPlaneNormal, this->A, tempMaterial);
+            Plane *tPlane = new Plane(tPlaneNormal, this->A, tempMaterial, false);
             Point3D pHit;
             if (tPlane->rayObjectIntersect(ray, tmin, info)) 
             {   
@@ -206,6 +207,14 @@ class Triangle: public Object
                 tPlaneNormal = (this->A - this->C) ^ (this->A - this->B);
             }
             return Vec3D::normalize(tPlaneNormal);
+        }
+        bool getShadows() const
+        {
+            return this->material->getShadows;
+        }
+        bool getCastShadows() const
+        {
+            return this->castShadows;
         }
 };
 

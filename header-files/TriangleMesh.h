@@ -14,12 +14,13 @@
 class TriangleMesh: public Object {
     public:
         Material *material;
+        bool castShadows;
         int nTriangles, nVertices, triangleIndice = 0;
         std::vector<Point3D> vertices;
         std::vector<Point3I> triangles;
         std::vector<Vec3D> triangleNormals;
         std::vector<Vec3D> verticesNormals;
-        TriangleMesh(int n, int v, Material *m): nTriangles(n), nVertices(n), material(m) {}
+        TriangleMesh(int n, int v, Material *m, bool s): nTriangles(n), nVertices(n), material(m), castShadows(s) {}
         ~TriangleMesh() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, HitInfo &info) 
         {
@@ -37,9 +38,9 @@ class TriangleMesh: public Object {
                     tPlaneNormal = (A - C) ^ (A - B);
                 }
                 Material *tempMaterial = new Material{
-                    color, 0, 0, 0, 0, 0, 0
+                    color, 0, 0, 0, 0, 0, 0, false
                 };
-                Plane *tPlane = new Plane(tPlaneNormal, A, tempMaterial);
+                Plane *tPlane = new Plane(tPlaneNormal, A, tempMaterial, true);
                 Point3D pHit;
                 if (tPlane->rayObjectIntersect(ray, tmin, info)) // to-do: the intersecion fails when 3 respective coordinates on
                 {   // diferent points, equals to 0
@@ -220,6 +221,14 @@ class TriangleMesh: public Object {
                 tPlaneNormal = (A - C) ^ (A - B);
             }
             return Vec3D::normalize(tPlaneNormal);
+        }
+        bool getShadows() const
+        {
+            return this->material->getShadows;
+        }
+        bool getCastShadows() const
+        {
+            return this->castShadows;
         }
 };
 

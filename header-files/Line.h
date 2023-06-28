@@ -17,6 +17,7 @@ class Line: public Object
         RGBColor color;
         double difuseK, specularK, ambientK, reflectionK, transmissionK, phongExp;
         Material *material;
+        bool castShadows = false;
         Line(const Point3D &o, const Vec3D &d, const RGBColor &RGB): origin(o), direction(d), color(RGB) {}
         ~Line() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, HitInfo& hit)
@@ -75,6 +76,14 @@ class Line: public Object
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {
             return Vec3D();
+        }
+        bool getShadows() const
+        {
+            return false;
+        }
+        bool getCastShadows() const
+        {
+            return false;
         }
 };
 

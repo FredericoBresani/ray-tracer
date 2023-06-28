@@ -17,7 +17,8 @@ class Sphere: public Object
         Point3D center;
         double radius;
         Material *material;
-        Sphere(const Point3D &c, double r, Material *m): center(c), radius(r), material(m) {}
+        bool castShadows;
+        Sphere(const Point3D &c, double r, Material *m, bool s): center(c), radius(r), material(m), castShadows(s) {}
         ~Sphere() {}
         bool rayObjectIntersect(const Ray &ray, double *tmin, HitInfo& info)
         {
@@ -89,6 +90,14 @@ class Sphere: public Object
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {
             return Vec3D::normalize(hit - this->center);
+        }
+        bool getShadows() const
+        {
+            return this->material->getShadows;
+        }
+        bool getCastShadows() const 
+        {
+            return this->castShadows;
         }
 };
 

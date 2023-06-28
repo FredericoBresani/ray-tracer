@@ -9,13 +9,16 @@
 
 class PointLight: public Light {
     public:
-        PointLight(const Point3D& pos, const RGBColor& color): lightPos(pos), lightColor(color) {}
+        PointLight(const Point3D& pos, const RGBColor& color, bool s): lightPos(pos), lightColor(color) {
+            this->shadows = s;
+        }
         ~PointLight() {}
 
         Vec3D getDirection(HitInfo &hit);
         RGBColor incidentRadiance(HitInfo &hit);
         Point3D getPos();
         RGBColor getColor();
+        bool castShadows();
     private:
         Point3D lightPos;
         RGBColor lightColor;
@@ -40,6 +43,11 @@ Point3D PointLight::getPos()
 RGBColor PointLight::getColor()
 {
     return this->lightColor;
+}
+
+bool PointLight::castShadows()
+{
+    return this->shadows;
 }
 
 
