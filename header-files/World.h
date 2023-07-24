@@ -41,7 +41,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
     HitInfo *hInfo = new HitInfo();
     RGBColor color, objectColor, flatColor, difuseColor, specularColor, reflectiveColor, transparentColor;
     if (depth == 0) {
-        return color;
+        return RGBColor(0, 0, 0);
     }
     for (int i = 0; i < objetos.size(); i++)
     {
@@ -72,6 +72,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         RGBColor resultingColor, mixedColor, specularColor;
         hInfo->toCamera = Vec3D::normalize(camera.getPos() - hInfo->hit_location);
         hInfo->viewerReflex = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera);
+        // hInfo->viewerRefraction = Vec3D::normalize()
         Point3D hitPoint = hInfo->hit_location + hInfo->normal*0.001;
 
         Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
@@ -106,7 +107,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         }
 
         // float maxComponent = std::max(resultingColor.r, std::max(resultingColor.g, resultingColor.b));
-        flatColor = ambient->color*ka + resultingColor;
+        flatColor = ambient->color*ka + resultingColor*kd;
         /* if (maxComponent > 255.0) {
             flatColor = (resultingColor/maxComponent)*255.0;
         } else {
@@ -119,7 +120,10 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
             // color = (color + trace(Ray(hitPoint, difuseDirection), objetos, camera, lights, ambient, depth - 1))*(kd/2.0);
         }
         if (kr > 0) {
-            color = (color + trace(Ray(hitPoint, reflexDirection), objetos, camera, lights, ambient, depth - 1))*(kr/2.0);
+            color = (color + trace(Ray(hitPoint, hInfo->viewerReflex), objetos, camera, lights, ambient, depth - 1))*(kr);
+        }
+        if (kt > 0) {
+            // color = (color + trace(Ray(hitPoint, refracDirection), objetos, camera, lights, ambient, depth - 1))*(kt/2.0);
         }
 
         return color;
