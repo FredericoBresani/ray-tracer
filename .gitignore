@@ -1,3 +1,6 @@
 ./vscode/*
 ./ray-tracer.dSYM
 ./ray-tracer.exe
+/ray-tracer.exe
+ray-tracer.exe
+./ray-tracer
