@@ -43,6 +43,9 @@ void PinholeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& li
         } else {
             dir = dir + right;
         }
+        if (i == 20100) {
+            int pou = 0;
+        }
         //anti-aliasing
         int samplesByRow = sqrt(sampler_ptr->get_num_samples());
         RGBColor sum;

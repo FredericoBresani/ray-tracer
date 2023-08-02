@@ -45,32 +45,31 @@ class TriangleMesh: public Object {
                 if (tPlane->rayObjectIntersect(ray, tmin, info)) // to-do: the intersecion fails when 3 respective coordinates on
                 {   // diferent points, equals to 0
                     free(tPlane);
-                    if ((*tmin) < kEpsilon) return false;
+                    // if ((*tmin) < kEpsilon) return false;
                     pHit = ray.origin + ray.direction*(*tmin);      
                     //|A.x B.x C.x||a|   |X|
                     //|A.y B.y C.y||b| = |Y|
                     //|A.z B.z C.z||g|   |Z|
-                    double det = A.x*B.y*C.z - A.x*C.y*B.z - B.x*A.y*C.z + B.x*C.y*A.z + C.x*A.y*B.z - C.x*B.y*A.z;
+                    // gamma = 1 - alpha - beta
+                    double det = A.x*B.y*C.z - A.x*C.y*B.z - B.x*A.y*C.z + B.x*C.y*A.z + C.x*A.y*B.z - C.x*C.y*A.z;
 
-                    double alpha = (pHit.x*B.y*C.z - pHit.x*C.y*B.z - B.x*pHit.y*C.z + B.x*C.y*pHit.z + C.x*pHit.y*B.z - C.x*B.y*pHit.z)/det;
-                    if (alpha > 1 || alpha < 0) return false;
+                    double alpha = (pHit.x*B.y*C.z - pHit.x*C.y*B.z - B.x*pHit.y*C.z + B.x*C.y*pHit.z + C.x*pHit.y*B.z - C.x*C.y*pHit.z)/det;
+                    // if (alpha > 1 || alpha < 0) return false;
 
-                    double beta = (A.x*pHit.y*C.z - A.x*C.y*pHit.z - pHit.x*A.y*C.z + pHit.x*C.y*A.z + C.x*A.y*B.z - C.x*pHit.y*A.z)/det;
-                    if (beta > 1 || beta < 0) return false;
+                    double beta = (A.x*pHit.y*C.z - A.x*C.y*pHit.z - pHit.x*A.y*C.z + pHit.x*C.y*A.z + C.x*A.y*pHit.z - C.x*C.y*A.z)/det;
 
-                    if (alpha + beta > 1 || alpha + beta < 0) return false;
-
-                    // double gama = (A.x*B.y*pHit.z - A.x*pHit.y*B.z - B.x*A.y*pHit.z + B.x*pHit.y*A.z + pHit.x*A.y*B.z - pHit.x*B.y*A.z)/det; 
                     
-                    hit = true;
-                    if ((*tmin) < min)
+                    if (beta > 0 && alpha > 0 && (beta + alpha < 1))
                     {
-                        info.hit_object = true;
-                        this->triangleIndice = i;
-                        min = (*tmin);
+                        hit = true;
+                        if ((*tmin) < min)
+                        {
+                            info.hit_object = true;
+                            this->triangleIndice = i;
+                            min = (*tmin);
+                        }
                     }
-                } else {
-                    (*tmin) = infinity;
+                    // double gama = (A.x*B.y*pHit.z - A.x*pHit.y*B.z - B.x*A.y*pHit.z + B.x*pHit.y*A.z + pHit.x*A.y*B.z - pHit.x*B.y*A.z)/det; 
                 }
             }
             if (hit)
