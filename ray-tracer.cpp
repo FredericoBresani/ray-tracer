@@ -156,9 +156,9 @@ int main()
             }
             case 'c':
             {
-                camera = new PinholeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14);
+                // camera = new PinholeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14);
                 // camera = new ThinLensCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
-                // camera = new FishEyeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
+                camera = new FishEyeCamera(_1, _2, _3, Vec3D(_4, _5, _6), Point3D(_7, _8, _9), Point3D(_10, _11, _12), _13, _14, _15);
 
 
                 //1rad = 180/pi graus

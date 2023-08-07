@@ -21,7 +21,7 @@ class Plane: public Object
         bool rayObjectIntersect(const Ray &ray, double *tmin, HitInfo& info)
         {
             double t = ((pp - ray.origin) * this->normal) / (ray.direction * this->normal);
-            if (t > kEpsilon && t < (*tmin))
+            if (t > kEpsilon)
             {
                 (*tmin) = t;
                 if (!(this->getKd() == 0 && this->getKr() == 0 && this->getKs() == 0)) { // situation where is not beeing used as a subroutine

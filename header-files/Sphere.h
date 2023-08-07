@@ -29,7 +29,7 @@ class Sphere: public Object
             if (delta == 0.0)
             {
                 double t = (b*b)/(2.0*a);
-                if (t > kEpsilon && t < (*tmin))
+                if (t > kEpsilon)
                 {
                     (*tmin) = t;
                     info.hit_object = true;
@@ -43,13 +43,13 @@ class Sphere: public Object
                 double sqrtDelta = pow(delta, 0.5);
                 double t1 = (((-1)*b) + sqrtDelta)/(2.0*a);
                 double t2 = (((-1)*b) - sqrtDelta)/(2.0*a);
-                if ((t1 < t2) && (t1 > kEpsilon) && (t1 < (*tmin)))
+                if ((t1 < t2) && (t1 > kEpsilon))
                 {
                     (*tmin) = t1;
                     info.hit_object = true;
                     return true;
                 }
-                else if (t2 > kEpsilon && t2 < (*tmin))
+                else if (t2 > kEpsilon)
                 {
                     (*tmin) = t2;
                     info.hit_object = true;

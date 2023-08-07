@@ -44,19 +44,17 @@ class TriangleMesh: public Object {
                 Point3D pHit;
                 if (tPlane->rayObjectIntersect(ray, tmin, info)) // to-do: the intersecion fails when 3 respective coordinates on
                 {   // diferent points, equals to 0
-                    free(tPlane);
-                    // if ((*tmin) < kEpsilon) return false;
                     pHit = ray.origin + ray.direction*(*tmin);      
                     //|A.x B.x C.x||a|   |X|
                     //|A.y B.y C.y||b| = |Y|
                     //|A.z B.z C.z||g|   |Z|
                     // gamma = 1 - alpha - beta
-                    double det = A.x*B.y*C.z - A.x*C.y*B.z - B.x*A.y*C.z + B.x*C.y*A.z + C.x*A.y*B.z - C.x*C.y*A.z;
+                    double det = A.x*((B.y*C.z) - (C.y*B.z))  + B.x*((C.y*A.z) - (A.y*C.z)) + C.x*((A.y*B.z) - (B.y*A.z)); 
 
-                    double alpha = (pHit.x*B.y*C.z - pHit.x*C.y*B.z - B.x*pHit.y*C.z + B.x*C.y*pHit.z + C.x*pHit.y*B.z - C.x*C.y*pHit.z)/det;
+                    double alpha = (pHit.x*((B.y*C.z) - (C.y*B.z))  + B.x*((C.y*pHit.z) - (pHit.y*C.z)) + C.x*((pHit.y*B.z) - (B.y*pHit.z)))/det;
                     // if (alpha > 1 || alpha < 0) return false;
 
-                    double beta = (A.x*pHit.y*C.z - A.x*C.y*pHit.z - pHit.x*A.y*C.z + pHit.x*C.y*A.z + C.x*A.y*pHit.z - C.x*C.y*A.z)/det;
+                    double beta = (A.x*((pHit.y*C.z) - (C.y*pHit.z))  + pHit.x*((C.y*A.z) - (A.y*C.z)) + C.x*((A.y*pHit.z) - (pHit.y*A.z)))/det;
 
                     
                     if (beta > 0 && alpha > 0 && (beta + alpha < 1))
@@ -71,7 +69,10 @@ class TriangleMesh: public Object {
                     }
                     // double gama = (A.x*B.y*pHit.z - A.x*pHit.y*B.z - B.x*A.y*pHit.z + B.x*pHit.y*A.z + pHit.x*A.y*B.z - pHit.x*B.y*A.z)/det; 
                 }
+                free(tPlane);
+                free(tempMaterial);
             }
+
             if (hit)
             {
                 (*tmin) = min;

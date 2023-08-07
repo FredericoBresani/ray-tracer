@@ -43,7 +43,7 @@ void PinholeCamera::render(std::vector<Object*> objetos, std::vector<Light*>& li
         } else {
             dir = dir + right;
         }
-        if (i == 20100) {
+        if (i == 19900) {
             int pou = 0;
         }
         //anti-aliasing
