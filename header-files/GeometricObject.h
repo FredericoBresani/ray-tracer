@@ -23,6 +23,7 @@ class Object
         virtual double getKa() const = 0;
         virtual double getKr() const = 0;
         virtual double getKt() const = 0;
+        virtual double getIor() const = 0;
         virtual double getPhongExp() const = 0;
         virtual Vec3D getNormal(const Point3D &hit, const Ray &ray) const = 0;
         virtual bool getShadows() const = 0;

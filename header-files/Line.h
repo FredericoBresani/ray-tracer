@@ -73,6 +73,10 @@ class Line: public Object
         {
             return this->phongExp;
         }
+        double getIor() const 
+        {
+            return this->material->ior;
+        }
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {
             return Vec3D();

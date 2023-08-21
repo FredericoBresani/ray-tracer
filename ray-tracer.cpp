@@ -47,19 +47,7 @@ RGBColor setPixelColorCoordinates(const Point3D &location)
     return aux;
 }
 
-/*RGBColor setBackgroundSmoothness(const Point3D &pixel, Camera *camera) 
-{
-    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, camera->cameraPos);
-    double maxScreen = 0, x = 0, y = 0;
-    if (camera->hr >= camera->vr) {
-        maxScreen = double(camera->hr)/double(camera->vr);
-        y = (1.0 + std::abs(screenCoordinates.y))/2.0;
-    } else {
-        maxScreen = double(camera->vr)/double(camera->hr);
-        y = (maxScreen + std::abs(screenCoordinates.y))/(2.0*maxScreen);
-    }
-    return RGBColor(135.0, 206.0, 235.0)*y;
-}
+/*
 
 RGBColor setBackgroundRGBCoordinates(const Point3D &pixel, Camera *camera) 
 {
@@ -100,7 +88,7 @@ int main()
             case 's': 
             {
                 Material *mater = new Material{
-                    RGBColor(_5, _6, _7), _8, _9, _10, _11, _12, _13, (bool)_15
+                    RGBColor(_5, _6, _7), _8, _9, _10, _11, _12, _13, (bool)_15, _16
                 };
                 Sphere *e = new Sphere(Point3D(_1, _2, _3), _4, mater, (bool)_14);
                 if (objetos.size() == 0) {
@@ -116,7 +104,7 @@ int main()
             case 'p':
             {
                 Material *mater = new Material{
-                    RGBColor(_7, _8, _9), _10, _11, _12, _13, _14, _15, (bool)_17
+                    RGBColor(_7, _8, _9), _10, _11, _12, _13, _14, _15, (bool)_17, _18
                 };
                 Plane *p = new Plane(Vec3D(_4, _5, _6), Point3D(_1, _2, _3), mater, (bool)_16);
                 objetos.push_back(p);
@@ -125,7 +113,7 @@ int main()
             case 't':
             {
                 Material *mater = new Material{
-                    RGBColor(_3, _4, _5), _6, _7, _8, _9, _10, _11, (bool)_13
+                    RGBColor(_3, _4, _5), _6, _7, _8, _9, _10, _11, (bool)_13, _14
                 };
                 TriangleMesh *mesh = new TriangleMesh((int)_1, (int)_2, mater, (bool)_12);
 

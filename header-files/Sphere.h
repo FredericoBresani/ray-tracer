@@ -87,6 +87,10 @@ class Sphere: public Object
         {
             return this->material->roughK;
         }
+        double getIor() const 
+        {
+            return this->material->ior;
+        }
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {
             return Vec3D::normalize(hit - this->center);

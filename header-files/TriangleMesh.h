@@ -38,7 +38,7 @@ class TriangleMesh: public Object {
                     tPlaneNormal = (A - C) ^ (A - B);
                 }
                 Material *tempMaterial = new Material{
-                    color, 0, 0, 0, 0, 0, 0, false
+                    color, 0, 0, 0, 0, 0, 0, false, 0
                 };
                 Plane *tPlane = new Plane(tPlaneNormal, A, tempMaterial, true);
                 Point3D pHit;
@@ -107,6 +107,10 @@ class TriangleMesh: public Object {
         double getPhongExp() const
         {
             return this->material->roughK;
+        }
+        double getIor() const
+        {
+            return this->material->ior;
         }
         Vec3D getNormal(const Point3D &hit, const Ray &ray) const
         {

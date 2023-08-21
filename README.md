@@ -3,7 +3,7 @@
 #### input format
 - spheres:
 ```bash
-s c1 c2 c3 r R G B kd ks ka kr kt p s ms
+s c1 c2 c3 r R G B kd ks ka kr kt p s ms ior
 # s: identify a sphere
 # (c1, c2, c3): the coordinates of the sphere center
 # r: sphere radius
@@ -11,7 +11,7 @@ s c1 c2 c3 r R G B kd ks ka kr kt p s ms
 ```
 - planes:
 ```bash
-p x y z v1 v2 v3 R G B kd ks ka kr kt p s ms
+p x y z v1 v2 v3 R G B kd ks ka kr kt p s ms ior
 # p: identify a plane
 # (x, y, z): the coordinates of a point in the plane
 # (v1, v2, v3): the coordinates of the plane normal
@@ -19,7 +19,7 @@ p x y z v1 v2 v3 R G B kd ks ka kr kt p s ms
 
 - Triangle mesh:
 ```bash
-t nt nv R G B kd ks ka kr kt p s ms
+t nt nv R G B kd ks ka kr kt p s ms ior
 p1x p1y p1z
 p2x p2y p2z
 .
@@ -48,6 +48,7 @@ tnta tntb tntc
 # p:  Phong exponent
 # s: boolean to tell if the object could cast shadows
 # ms: boolean inside the object material to know if the material can get shadowed
+# ior: refraction coeficient
 ```
 
 - lights:

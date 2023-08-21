@@ -14,7 +14,6 @@
 #include "Ambient.h"
 #include "Light.h"
 
-
 bool inShadow(Ray ray, std::vector<Object*> &objetos, float lightDistance)
 {
     double t = infinity;
@@ -36,7 +35,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
 {
     double t = infinity;
     double tmin = infinity;
-    double kd, ks, ka, kr, kt, phongExp;
+    double kd, ks, ka, kr, kt, phongExp, ior;
     bool getShadows; 
     HitInfo *hInfo = new HitInfo();
     RGBColor color, objectColor, flatColor, difuseColor, specularColor, reflectiveColor, transparentColor;
@@ -58,6 +57,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
                 ka = objetos[i]->getKa();
                 kr = objetos[i]->getKr();
                 kt = objetos[i]->getKt();
+                ior = objetos[i]->getIor();
                 phongExp = objetos[i]->getPhongExp();
                 hInfo->material_pointer = objetos[i]->material;
                 getShadows = objetos[i]->getShadows();
@@ -70,20 +70,17 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         //shade hit location
         double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0, reflectiveness = 0;
         RGBColor resultingColor, mixedColor, specularColor;
-        hInfo->toCamera = Vec3D::normalize(camera.getPos() - hInfo->hit_location);
-        hInfo->viewerReflex = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera);
+        hInfo->toCamera = Vec3D::normalize(ray.origin - hInfo->hit_location);
         // hInfo->viewerRefraction = Vec3D::normalize()
         Point3D hitPoint = hInfo->hit_location + hInfo->normal*0.001;
 
+        /*
         Vec3D auxVec = hInfo->viewerReflex^hInfo->normal;
-
         Vec3D auxReflex = auxVec^hInfo->viewerReflex;
         Vec3D reflexDirection = (hInfo->viewerReflex*10.0) + (auxVec*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + (auxReflex*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr)) + ((auxReflex*(-1.0))*((double)std::rand()/(double)RAND_MAX)*(1.0 - kr));
-
-
         Vec3D auxNormal = auxVec^hInfo->normal;
         Vec3D difuseDirection = hInfo->normal + (auxVec*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxVec*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd) + (auxNormal*((double)std::rand()/(double)RAND_MAX)*kd) + ((auxNormal*(-1.0))*((double)std::rand()/(double)RAND_MAX)*kd);
-        
+        */
         reflectiveness = 1.0 + ambient->ir;
         for (int l = 0; l < lights.size(); l++) {
             hInfo->toLight = lights[l]->getDirection((*hInfo));
@@ -120,19 +117,34 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
             // color = (color + trace(Ray(hitPoint, difuseDirection), objetos, camera, lights, ambient, depth - 1))*(kd/2.0);
         }
         if (kr > 0) {
+            hInfo->viewerReflex = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera);
             color = (color + trace(Ray(hitPoint, hInfo->viewerReflex), objetos, camera, lights, ambient, depth - 1))*(kr);
         }
-        if (kt > 0) {
-            // color = (color + trace(Ray(hitPoint, refracDirection), objetos, camera, lights, ambient, depth - 1))*(kt/2.0);
+        if (kt > 0) { 
+            double eta = ior;
+            double cos = hInfo->normal*hInfo->toCamera;
+
+            if (cos < 0.0) //por enquanto isso funciona apenas para a esfera
+            // no caso da malha de triângulos a normal retornada sempre "aponta" para o observador
+            {
+                cos = -cos;
+                eta = 1/eta;
+                hInfo->normal = hInfo->normal*(-1);
+            }
+            double temp = 1.0 - ((1.0 - cos*cos) / (eta*eta));
+            double cos2 = sqrt(temp);
+            hInfo->refraction = hInfo->toCamera*(-1)/eta - (hInfo->normal*(cos2 - cos/eta));
+            hitPoint = hitPoint + hInfo->refraction*0.015;
+            color = (color + trace(Ray(hitPoint, hInfo->refraction), objetos, camera, lights, ambient, depth - 1))*(kt);
         }
 
         return color;
     } else {
         //return background color
-        // return setBackgroundSmoothness(pixel, &camera);
+        return setBackgroundSmoothness(pixel, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
         // return RGBColor(0.0, 0.0, 0.0);
-        return RGBColor(255.0, 255.0, 255.0);
+        // return RGBColor(255.0, 255.0, 255.0);
         // return RGBColor(190.0, 230.0, 255.0);
     }
     
