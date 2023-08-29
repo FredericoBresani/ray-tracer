@@ -157,10 +157,10 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         return color;
     } else {
         //return background color
-        return setBackgroundSmoothness(ray.origin + ray.direction, &camera);
+        // return setBackgroundSmoothness(ray.origin + ray.direction, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
         // return RGBColor(0.0, 0.0, 0.0);
-        // return RGBColor(255.0, 255.0, 255.0);
+        return RGBColor(255.0, 255.0, 255.0);
         // return RGBColor(190.0, 230.0, 255.0);
     }
     
