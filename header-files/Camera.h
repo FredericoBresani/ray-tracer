@@ -15,6 +15,8 @@ class Camera
         Point3D worldToCameraCoordinates(const Point3D &point, const Point3D &cameraPosition);
         Point2D worldToScreenCoordinates(const Point3D &point, const Point3D &cameraLocation);
         Point3D getPos();
+        int getHr();
+        int getVr();
         virtual void set_sampler() = 0;
         virtual void render(std::vector<Object*> objetos, std::vector<Light*>& lights, Ambient& ambient) = 0;
     protected:
@@ -79,6 +81,16 @@ Point2D Camera::worldToScreenCoordinates(const Point3D &point, const Point3D &ca
 void Camera::set_sampler()
 {
     sampler_ptr = new JitteredSampler(samples);
+}
+
+int Camera::getHr()
+{
+    return this->hr;
+}
+
+int Camera::getVr()
+{
+    return this->vr;
 }
 
 

@@ -75,21 +75,4 @@ void PinholeCamera::set_sampler()
     sampler_ptr = new JitteredSampler(samples);
 }
 
-RGBColor PinholeCamera::setBackgroundSmoothness(const Point3D &pixel, Camera *camera) 
-{
-    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, this->cameraPos);
-    double maxScreen = 0, x = 0, y = 0;
-    if (camera->hr >= camera->vr) {
-        maxScreen = double(camera->hr)/double(camera->vr);
-        y = (1.0 + std::abs(screenCoordinates.y))/2.0;
-    } else {
-        maxScreen = double(camera->vr)/double(camera->hr);
-        y = (maxScreen + std::abs(screenCoordinates.y))/(2.0*maxScreen);
-    }
-    return RGBColor(135.0, 206.0, 235.0)*y;
-}
-
-
-
-
 #endif

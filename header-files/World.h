@@ -31,6 +31,20 @@ bool inShadow(Ray ray, std::vector<Object*> &objetos, float lightDistance)
     return false;
 }
 
+RGBColor setBackgroundSmoothness(const Point3D &pixel, Camera *camera) 
+{
+    Point2D screenCoordinates = camera->worldToScreenCoordinates(pixel, camera->getPos());
+    double maxScreen = 0, x = 0, y = 0;
+    if (camera->getHr() >= camera->getVr()) {
+        maxScreen = double(camera->getHr())/double(camera->getVr());
+        y = (1.0 + std::abs(screenCoordinates.y))/2.0;
+    } else {
+        maxScreen = double(camera->getVr())/double(camera->getHr());
+        y = (maxScreen + std::abs(screenCoordinates.y))/(2.0*maxScreen);
+    }
+    return RGBColor(210.0, 230.0, 255.0)*y;
+}
+
 RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, std::vector<Light*> lights, Ambient *ambient, int depth)
 {
     double t = infinity;
@@ -119,6 +133,7 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         if (kr > 0) {
             hInfo->viewerReflex = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toCamera)) - hInfo->toCamera);
             color = (color + trace(Ray(hitPoint, hInfo->viewerReflex), objetos, camera, lights, ambient, depth - 1))*(kr);
+            color = RGBColor(std::min(color.r, 255.0), std::min(color.g, 255.0), std::min(color.b, 255.0));
         }
         if (kt > 0) { 
             double eta = ior;
@@ -136,12 +151,13 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
             hInfo->refraction = hInfo->toCamera*(-1)/eta - (hInfo->normal*(cos2 - cos/eta));
             hitPoint = hitPoint + hInfo->refraction*0.015;
             color = (color + trace(Ray(hitPoint, hInfo->refraction), objetos, camera, lights, ambient, depth - 1))*(kt);
+            color = RGBColor(std::min(color.r, 255.0), std::min(color.g, 255.0), std::min(color.b, 255.0));
         }
 
         return color;
     } else {
         //return background color
-        return setBackgroundSmoothness(pixel, &camera);
+        return setBackgroundSmoothness(ray.origin + ray.direction, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
         // return RGBColor(0.0, 0.0, 0.0);
         // return RGBColor(255.0, 255.0, 255.0);
