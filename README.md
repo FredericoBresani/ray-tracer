@@ -24,6 +24,12 @@
 #### Metalic spheres and triangles inside walls
 ![Metalic spheres and triangles inside walls](presets/spheres-triangles-walls.png)
 - Here I got a noisy image do to the diffuse reflection;
+
+-----
+
+#### Fish eye camera
+![Fish eye camera](presets/fish-eye-example.png)
+- A simple implementation of a fish eye camera;
 ### input format
 #### Spheres
 ```bash
