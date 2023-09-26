@@ -19,6 +19,7 @@
 #### Thins lens camera
 ![Thin lens camera](presets/thin-lens-camera.png)
 - With this implementation of the camera I'm able to render imagens choosing focal planes;
+- Here I'm using triangle meshes;
 -----
 #### Metalic spheres and triangles inside walls
 ![Metalic spheres and triangles inside walls](presets/spheres-triangles-walls.png)
