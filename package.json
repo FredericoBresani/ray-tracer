@@ -6,11 +6,11 @@
   "scripts": {
     "build:macos": "clang++ ray-tracer.cpp -std=c++17 -o ray-tracer",
     "exec:macos": "./ray-tracer < input.txt > output.txt",
-    "buildRun:macos": "clang++ ray-tracer.cpp -std=c++17 -o ray-tracer && ./ray-tracer < input.txt > output.txt",
+    "buildRun:macos": "clang++ ray-tracer.cpp -std=c++17 -o ray-tracer && ./ray-tracer < input.txt > output.txt && python ./convert.py",
     "debug:macos": "",
 
     "build:windows": "g++ ray-tracer.cpp -o ray-tracer",
-    "buildRun:windows": "g++ ray-tracer.cpp -std=c++17 -o ray-tracer && ray-tracer < test.txt > output.txt",
+    "buildRun:windows": "g++ ray-tracer.cpp -std=c++17 -o ray-tracer && ray-tracer < test.txt > output.txt && python ./convert.py",
     "exec:windows": "",
     "debug:windows": "",
 

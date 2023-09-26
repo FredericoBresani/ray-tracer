@@ -1,5 +1,23 @@
 # ray-tracer
 
+#### Some rendered examples
+![Colored shadows](presets/colored-shadows.png)
+
+-----
+
+![Spheres in limbo](presets/spheres-in-limbo.png)
+
+-----
+
+![Transparent, metalic, glass and plastic sphere](presets/spheres-transp-metal-glass.png)
+
+-----
+
+![Thin lens camera](presets/thin-lens-camera.png)
+
+-----
+
+![Metalic spheres and triangles inside walls](presets/spheres-triangles-walls.png)
 #### input format
 - spheres:
 ```bash
