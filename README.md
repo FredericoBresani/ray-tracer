@@ -1,25 +1,30 @@
 # ray-tracer
 
-#### Some rendered examples
+### Some rendered examples
+
+#### Colored shadows
 ![Colored shadows](presets/colored-shadows.png)
-
+- This example has no kinds of reflection;
 -----
 
+#### Spheres in limbo
 ![Spheres in limbo](presets/spheres-in-limbo.png)
-
+- Here I get some diffuse reflection;
 -----
-
+#### Transparent, metalic, glass and plastic spheres
 ![Transparent, metalic, glass and plastic sphere](presets/spheres-transp-metal-glass.png)
-
+- No diffuse reflection;
+- Reflections and transparency;
 -----
-
+#### Thins lens camera
 ![Thin lens camera](presets/thin-lens-camera.png)
-
+- With this implementation of the camera I'm able to render imagens choosing focal planes;
 -----
-
+#### Metalic spheres and triangles inside walls
 ![Metalic spheres and triangles inside walls](presets/spheres-triangles-walls.png)
-#### input format
-- spheres:
+- Here I got a noisy image do to the diffuse reflection;
+### input format
+#### Spheres
 ```bash
 s c1 c2 c3 r R G B kd ks ka kr kt p s ms ior
 # s: identify a sphere
@@ -27,7 +32,10 @@ s c1 c2 c3 r R G B kd ks ka kr kt p s ms ior
 # r: sphere radius
 # (R, G, B): the sphere difuse color
 ```
-- planes:
+
+-----
+
+#### Planes
 ```bash
 p x y z v1 v2 v3 R G B kd ks ka kr kt p s ms ior
 # p: identify a plane
@@ -35,7 +43,10 @@ p x y z v1 v2 v3 R G B kd ks ka kr kt p s ms ior
 # (v1, v2, v3): the coordinates of the plane normal
 ```
 
-- Triangle mesh:
+-----
+
+
+#### Triangle mesh
 ```bash
 t nt nv R G B kd ks ka kr kt p s ms ior
 p1x p1y p1z
@@ -55,7 +66,10 @@ tnta tntb tntc
 # (t1a, t1b, t1c) to (tnta, tntb, tntc): triples of vertices indices
 ```
 
-- all previous objects:
+-----
+
+
+#### All previous objects:
 ```bash
 # all the objects has the following attributes to define their material
 # kd: Difuse coeficient
@@ -69,7 +83,10 @@ tnta tntb tntc
 # ior: refraction coeficient
 ```
 
-- lights:
+-----
+
+
+#### Lights
 ```bash
 l l1 l2 l3 R G B s
 # l: identify a light
@@ -78,7 +95,9 @@ l l1 l2 l3 R G B s
 # s: boolean to tell if the light could produce shadows
 ```
 
-- camera:
+-----
+
+#### Camera
 ```bash
 c h_res v_res d up1 up2 up3 l1 l2 l3 m1 m2 m3 p s optional
 # c: identify a camera
@@ -93,7 +112,9 @@ c h_res v_res d up1 up2 up3 l1 l2 l3 m1 m2 m3 p s optional
 # optional: it could be the focal plane distance or the fish eye camera max angle (from 0 to 2PI rad)
 ```
 
-- ambient:
+-----
+
+#### Ambient:
 ```bash
 a R G B ir depth
 # (R, G, B): The ambient light color
