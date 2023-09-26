@@ -23,7 +23,7 @@
     "url": "git+https://github.com/FredericoBresani/ray-tracer.git"
   },
   "author": "Frederico fbs4@cin.ufpe.br",
-  "license": "ISC",
+  "license": "MIT License",
   "bugs": {
     "url": "https://github.com/FredericoBresani/ray-tracer/issues"
   },
