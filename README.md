@@ -1,4 +1,5 @@
 # ray-tracer
+The default settings renders 600x400 images using 9 samples per pixel and a depth of 6 to the recursive part.
 
 ### Some rendered examples
 

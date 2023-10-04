@@ -1,3 +1,3 @@
 from PIL import Image
-im = Image.open("./presets/thin-lens-camera.ppm")
-im.save("./presets/thin-lens-camera.png")
+im = Image.open("image.ppm")
+im.save("image.png")
