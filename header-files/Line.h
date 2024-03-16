@@ -8,6 +8,7 @@
 #include "Ray.h"
 #include "RGBColor.h"
 #include "Material.h"
+#include <vector>
 
 class Line: public Object 
 {
@@ -88,6 +89,11 @@ class Line: public Object
         bool getCastShadows() const
         {
             return false;
+        }
+        std::vector<Point3D> sampleObject()
+        {
+            std::vector<Point3D> samples = {Point3D()};
+            return samples;
         }
 };
 

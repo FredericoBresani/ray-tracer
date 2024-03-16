@@ -26,6 +26,7 @@
 #include "./header-files/PointLight.h"
 #include "./header-files/HitInfo.h"
 #include "./header-files/Material.h"
+#include "./header-files/TriangleMeshLight.h"
 
 
 // lets use doubles for object-ray intersection and floats for shading calculations
@@ -138,8 +139,30 @@ int main()
             }
             case 'l':
             {
-                PointLight *l = new PointLight(Point3D(_1, _2, _3), RGBColor(_4, _5, _6), (bool)_7);
-                lights.push_back(l);
+                if (_8 > 0 && _9 > 0) {
+                    Material *mater = new Material(RGBColor(_4, _5, _6), 0, 0, 0, 0, 0, 0, _13, 0);
+                    TriangleMesh *mesh = new TriangleMesh((int)_8, (int)_9, mater, _12); 
+                    float v1, v2, v3;
+                    int i1, i2, i3;
+                    while (_9 > 0) {
+                        scanf("%f %f %f\n", &v1, &v2, &v3);
+                        mesh->vertices.push_back(Point3D(v1, v2, v3));
+                        _9--;
+                    }
+                    while(_8 > 0) {
+                        scanf("%i %i %i\n", &i1, &i2, &i3);
+                        mesh->triangles.push_back(Point3I(i1, i2, i3));
+                        _8--;
+                    }
+                    TriangleMeshLight *l = new TriangleMeshLight(mater->color, mesh, (int)_14);
+                    for (int i = 0; i < l->getLightSamples().size(); i++) {
+                        lights.push_back(new PointLight(l->getLightSamples()[i], mater->color, (bool)_7, (int)_14));
+                    }
+                    lights.push_back(l);
+                } else {
+                    PointLight *l = new PointLight(Point3D(_1, _2, _3), RGBColor(_4, _5, _6), (bool)_7, (int)_14);
+                    lights.push_back(l);
+                }
                 break;
             }
             case 'c':

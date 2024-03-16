@@ -9,6 +9,7 @@
 #include "RGBColor.h"
 #include "Material.h"
 #include <math.h>
+#include <vector>
 
 
 class Sphere: public Object 
@@ -102,6 +103,11 @@ class Sphere: public Object
         bool getCastShadows() const 
         {
             return this->castShadows;
+        }
+        std::vector<Point3D> sampleObject()
+        {
+            std::vector<Point3D> samples = {Point3D()};
+            return samples;
         }
 };
 

@@ -133,6 +133,11 @@ class TriangleMesh: public Object {
         {
             return this->castShadows;
         }
+        std::vector<Point3D> sampleObject()
+        {
+            std::vector<Point3D> samples = {Point3D()};
+            return samples;
+        }
 };
 
 

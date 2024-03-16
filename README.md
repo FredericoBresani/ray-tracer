@@ -56,7 +56,7 @@ p x y z v1 v2 v3 R G B kd ks ka kr kt p s ms ior
 
 #### Triangle mesh
 ```bash
-t nt nv R G B kd ks ka kr kt p s ms ior
+t nt nv R G B kd ks ka kr kt p s ms ior -0 -0 -0 -0
 p1x p1y p1z
 p2x p2y p2z
 .
@@ -72,6 +72,7 @@ tnta tntb tntc
 # t: identify a triangle
 # (p1x, p1y, p1z) to (pnvx, pnvy, pnvz): the coordinates of the the vertices
 # (t1a, t1b, t1c) to (tnta, tntb, tntc): triples of vertices indices
+# -0's are discarded
 ```
 
 -----
@@ -101,6 +102,15 @@ l l1 l2 l3 R G B s
 # (l1, l2, l3): the coordinates of the light location
 # (R, G, B): the light intensity
 # s: boolean to tell if the light could produce shadows
+
+l l1 l2 l3 R G B s nt nv -0 -0 os ms ns -0 -0 -0 -0
+# l: identify a light
+# (l1, l2, l3): the coordinates of the light location
+# (R, G, B): the light intensity
+# s: boolean to tell if the light could produce shadows
+# os: boolean to tell if the object can cast shadows
+# ms: boolean to tell if the object can get shadowed
+# ns: the number of samples the light will generate
 ```
 
 -----

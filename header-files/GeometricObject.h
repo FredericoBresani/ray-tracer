@@ -6,6 +6,7 @@
 #include "HitInfo.h"
 #include "RGBColor.h"
 #include "Material.h"
+#include <vector>
 
 
 class Object 
@@ -28,6 +29,7 @@ class Object
         virtual Vec3D getNormal(const Point3D &hit, const Ray &ray) const = 0;
         virtual bool getShadows() const = 0;
         virtual bool getCastShadows() const = 0;
+        virtual std::vector<Point3D> sampleObject() = 0;
 };
 
 #endif

@@ -7,6 +7,7 @@
 #include "Definitions.h"
 #include "RGBColor.h"
 #include "Material.h"
+#include <vector>
 
 
 class Plane: public Object 
@@ -76,6 +77,11 @@ class Plane: public Object
         bool getCastShadows() const 
         {
             return this->castShadows;
+        }
+        std::vector<Point3D> sampleObject()
+        {
+            std::vector<Point3D> samples = {Point3D()};
+            return samples;
         }
 };
 

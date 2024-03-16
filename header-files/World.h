@@ -80,6 +80,24 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
             }
         }
     }
+
+    for (int i = 0; i < lights.size(); i++) {
+        if (lights[i]->isExtense())
+        {
+            if(lights[i]->getLightModel()->rayObjectIntersect(ray, &t, *hInfo))
+            {
+                if (t < tmin) 
+                {
+                    tmin = t;
+                    objectColor = lights[i]->getColor();
+                    hInfo->hit_light = true;
+                }
+            }
+        }
+    }
+    if (hInfo->hit_light) {
+        return objectColor;
+    }
     if (hInfo->hit_object) {
         //shade hit location
         double difuseIndice = 0, rMax = 0, gMax = 0, bMax = 0, reflectiveness = 0;
@@ -97,23 +115,25 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         */
         reflectiveness = 1.0 + ambient->ir;
         for (int l = 0; l < lights.size(); l++) {
-            hInfo->toLight = lights[l]->getDirection((*hInfo));
-            // implement the attenuation of light by the distance
-            double lightDistance = Vec3D::norma(lights[l]->getPos() - hInfo->hit_location); 
-            hInfo->reflection = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight);
-            // add some flag to deactiviate shadows
-            if(lights[l]->castShadows() && getShadows)
-            {
-                if (!inShadow(Ray(hInfo->hit_location, hInfo->toLight), objetos, lightDistance)) 
+            if (!lights[l]->isExtense()) {
+                hInfo->toLight = lights[l]->getDirection((*hInfo));
+                // implement the attenuation of light by the distance
+                double lightDistance = Vec3D::norma(lights[l]->getPos() - hInfo->hit_location); 
+                hInfo->reflection = Vec3D::normalize(((hInfo->normal*2)*(hInfo->normal*hInfo->toLight)) - hInfo->toLight);
+                // add some flag to deactiviate shadows
+                if(lights[l]->castShadows() && getShadows)
                 {
+                    if (!inShadow(Ray(hInfo->hit_location, hInfo->toLight), objetos, lightDistance)) 
+                    {
+                        mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
+                        specularColor = lights[l]->getColor()*(ks*pow(std::max(hInfo->reflection*hInfo->toCamera, 0.0), phongExp));
+                        resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0) + specularColor;
+                    }
+                } else {
                     mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
                     specularColor = lights[l]->getColor()*(ks*pow(std::max(hInfo->reflection*hInfo->toCamera, 0.0), phongExp));
                     resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0) + specularColor;
                 }
-            } else {
-                mixedColor = ((lights[l]->getColor()^objectColor)*reflectiveness)/255.0;
-                specularColor = lights[l]->getColor()*(ks*pow(std::max(hInfo->reflection*hInfo->toCamera, 0.0), phongExp));
-                resultingColor = resultingColor + mixedColor*std::max(hInfo->normal*hInfo->toLight, 0.0) + specularColor;
             }
         }
 
@@ -159,9 +179,9 @@ RGBColor trace(const Ray &ray, std::vector<Object*>& objetos, Camera &camera, st
         //return background color
         // return setBackgroundSmoothness(ray.origin + ray.direction, &camera);
         // return setBackgroundRGBCoordinates(pixel, &camera);
-        // return RGBColor(0.0, 0.0, 0.0);
+        return RGBColor(0.0, 0.0, 0.0);
         // return RGBColor(255.0, 255.0, 255.0);
-        return RGBColor(210.0, 230.0, 255.0);
+        // return RGBColor(210.0, 230.0, 255.0);
     }
     
 }
